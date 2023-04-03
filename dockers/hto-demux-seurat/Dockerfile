@@ -13,7 +13,7 @@ COPY install-packages.R /opt/install-packages.R
 # install packages
 RUN Rscript --vanilla /opt/install-packages.R
 
-RUN pip3 install pandas numpy pyyaml scipy sklearn
+RUN pip3 install pandas numpy pyyaml scipy scikit-learn
 
 COPY hto-demux.R /opt/hto-demux.R
 COPY correct_fp_doublets.py /opt/correct_fp_doublets.py
