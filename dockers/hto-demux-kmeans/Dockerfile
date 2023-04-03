@@ -7,7 +7,7 @@ RUN apt-get update \
 
 RUN apt-get install --yes wget zlib1g-dev libbz2-dev liblzma-dev
 
-RUN pip3 install pandas numpy pyyaml scipy sklearn
+RUN pip3 install pandas numpy pyyaml scipy scikit-learn
 
 COPY demux_kmeans.py /opt/demux_kmeans.py
 COPY dna3bit.py /opt/dna3bit.py
