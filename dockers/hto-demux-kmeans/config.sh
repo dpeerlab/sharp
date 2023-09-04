@@ -1,5 +1,5 @@
-version="0.5.0"
+version="0.5.1"
 
 # docker related
-registry="quay.io/hisplan"
+registry="docker.io/sailmskcc"
 image_name="hto-demux-kmeans"
