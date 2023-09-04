@@ -13,6 +13,7 @@ import scipy.stats
 from sklearn.cluster import KMeans
 from dna3bit import DNA3Bit
 import warnings
+from scipy.stats.mstats import gmean
 
 
 logger = logging.getLogger("demux_kmeans")
@@ -27,24 +28,42 @@ logging.basicConfig(
 )
 
 
-def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
-
-    matrix = scipy.io.mmread(os.path.join(path_hto_umi_count_dir, "matrix.mtx.gz"))
+def hto_demux(
+    path_hto_umi_count_dir: str,
+    mode: int,
+    min_count_threshold: int
+):
+    # Construct sparse matrix of HTO counts
+    matrix = scipy.io.mmread(
+        os.path.join(path_hto_umi_count_dir, "matrix.mtx.gz")
+        )
     barcodes = pd.read_csv(
-        os.path.join(path_hto_umi_count_dir, "barcodes.tsv.gz"), header=None
+        os.path.join(path_hto_umi_count_dir, "barcodes.tsv.gz"),
+        header=None
     )[0]
     features = pd.read_csv(
-        os.path.join(path_hto_umi_count_dir, "features.tsv.gz"), header=None
+        os.path.join(path_hto_umi_count_dir, "features.tsv.gz"),
+        header=None
     )[0]
+
+    # Remove barcodes with less than minimum counts
+    negative_mask = np.ravel(matrix.sum(axis=0) > min_count_threshold)
+    csr = matrix.tocsr()[:, negative_mask]
 
     # convert to numeric cell barcode
     dna3bit = DNA3Bit()
-    numeric_barcodes = barcodes.apply(lambda cb: dna3bit.encode(cb))
+    numeric_barcodes = barcodes.apply(dna3bit.encode)
 
-    df_umi = pd.DataFrame(matrix.todense(), columns=numeric_barcodes, index=features).T
+    # Convert to DataFrame
+    df_umi = pd.DataFrame(
+        csr.todense(),
+        columns=numeric_barcodes[negative_mask],
+        index=features,
+    ).T
 
     logger.info(
-        "Loaded HTO UMI count matrix ({} x {})".format(df_umi.shape[0], df_umi.shape[1])
+        "Loaded HTO UMI count matrix %s",
+        df_umi.shape[0]
     )
 
     # drop the column `unmapped`
@@ -53,25 +72,23 @@ def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
     logger.info(f"Running in mode {mode}...")
     if mode == 1:
         # centered log-ratio (CLR) transformation
-        #     	            HTO_301-ACCCACCAGTAAGAC	HTO_302-GGTCGAGAGCATTCA	HTO_303-CTTGCCGCATGTCAT	HTO_304-AAAGCATTCTTCACG
-        # 227929296066909	2.609550	0.076485	2.049975	0.137688
-        # 164640656084404	2.477301	0.054396	0.046804	3.561632
-        # 121748877338358	2.501004	0.091309	0.034176	3.327706
-        # 134463437596589	3.060824	2.458869	0.053883
         df_clr = df_umi.apply(
-            lambda row: np.log1p((row + 1) / scipy.stats.mstats.gmean(row + 1)), axis=1
+            lambda row: np.log1p((row + 1) / gmean(row + 1)),
+            axis=1
         )
     elif mode == 2:
         # very noisy methanol-based
         df_clr = df_umi.apply(lambda row: row - np.mean(row), axis=1)
         df_clr = df_clr.applymap(lambda x: 0 if x < 0 else x)
         df_clr = df_clr.apply(
-            lambda row: np.log1p((row + 1) / scipy.stats.mstats.gmean(row + 1)), axis=1
+            lambda row: np.log1p((row + 1) / gmean(row + 1)),
+            axis=1
         )
     elif mode == 3:
         # aggresively rescue from doublets if in doubt
         df_clr = df_umi.apply(
-            lambda row: row / scipy.stats.mstats.gmean(row + 1), axis=1
+            lambda row: row / gmean(row + 1),
+            axis=1
         )
     else:
         raise Exception("Unrecognized mode...")
@@ -80,10 +97,10 @@ def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
     df_tmp = df_umi
     df_tmp.columns = range(0, len(df_tmp.columns))
 
-    # for each row (barcode), get the index of the one with the largest UMI count
+    # for each row/barcode, get the index of the one with the largest UMI count
     ss_umi_largest = df_tmp.idxmax(axis=1)
 
-    def kemans_per_row(row):
+    def kmeans_per_row(row):
         x = np.array(row).reshape(-1, 1)
         kmeans = KMeans(n_clusters=2, random_state=0).fit(x)
         y_predict = kmeans.predict(x)
@@ -96,9 +113,11 @@ def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
     # 191020391422693    [0, 1, 1, 0]
     # 204968413023541    [0, 0, 0, 1]
     with warnings.catch_warnings():
-        # avoid ConvergenceWarning: Number of distinct clusters (1) found smaller than n_clusters (2). Possibly due to duplicate points in X.
+        # avoid ConvergenceWarning: Number of distinct clusters (1)
+        # found smaller than n_clusters (2). 
+        # Possibly due to duplicate points in X.
         warnings.simplefilter("ignore")
-        df_kmeans = df_clr.apply(lambda row: kemans_per_row(row), axis=1)
+        df_kmeans = df_clr.apply(lambda row: kmeans_per_row(row), axis=1)
 
     df_kmeans_hotencoded = df_kmeans.apply(
         lambda x: "".join(str(y) for y in x)
@@ -121,7 +140,8 @@ def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
         # how many hto belong that group?
         num_htos = df_kmeans_hotencoded.loc[cb][0].count(group_id)
 
-        # if greater than or equal to two HTOs belong to that group, it means doublet
+        # if greater than or equal to two HTOs belong to that group,
+        # it means doublet
         # return "Doublet" if doublet, return HTO ID if singlet
         # return "Doublet" if num_htos >= 2 else "Singlet"
         return "Doublet" if num_htos >= 2 else hto_names[idmax]
@@ -132,12 +152,15 @@ def hto_demux(path_hto_umi_count_dir: str, mode: int, min_count_threshold: int):
     df_class.columns = ["CB", "hashID"]
     df_class.set_index("CB", inplace=True)
 
-    # mark as negative
-    # if the total count for a given CB is less than min-count threshold
-    mask_negative = df_umi.sum(axis=1) < min_count_threshold
-    df_class.where(~mask_negative, other="Negative", inplace=True)
-
     logger.debug(df_class.groupby(by="hashID").size())
+
+    df_neg = pd.DataFrame(
+        "Negative",
+        index=numeric_barcodes[~negative_mask],
+        columns=["hashID"],
+    )
+    df_neg.index.rename("CB", inplace=True)
+    df_class = pd.concat([df_class, df_neg]).loc[numeric_barcodes]
 
     df_class.to_csv("classification.tsv.gz", sep="\t", compression="gzip")
 

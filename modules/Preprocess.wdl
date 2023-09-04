@@ -152,7 +152,16 @@ workflow Preprocess {
         }
     }
 
-    File cbWhitelistTemp = select_first([WhitelistFromSeqcSparseBarcodes.out, WhitelistFromSeqcDenseMatrix.out, WhitelistFrom10x.outFilteredBarcodesACGT])
+    if (cellBarcodeWhiteListMethod == "custom") {
+        File customWhitelist = cellBarcodeWhitelistUri
+    }
+
+    File cbWhitelistTemp = select_first([
+        WhitelistFromSeqcSparseBarcodes.out,
+        WhitelistFromSeqcDenseMatrix.out,
+        WhitelistFrom10x.outFilteredBarcodesACGT,
+        customWhitelist
+    ])
 
     if (translate10XBarcodes == true) {
         # do translation if necessary
