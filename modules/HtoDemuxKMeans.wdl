@@ -15,7 +15,7 @@ task HtoDemuxKMeans {
         mode: { help: "1=default, 2=noisy methanol, 3=aggressively rescue from doublets" }
     }
 
-    String dockerImage = dockerRegistry + "/hto-demux-kmeans:0.5.0"
+    String dockerImage = "docker.io/sailmskcc/hto-demux-kmeans:0.5.1"
     Int numCores = 1
     Float inputSize = size(umiCountFiles, "GiB")
 
