@@ -1,5 +1,5 @@
-version="0.3.4"
+version="0.3.7"
 
 # docker related
-registry="quay.io/hisplan"
-image_name="hto-adt-postprocess"
+registry="docker.io"
+image_name="sailmskcc/hto-adt-postprocess"
