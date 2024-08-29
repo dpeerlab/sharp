@@ -29,9 +29,10 @@ logging.basicConfig(
 )
 
 
-def translate(adata: AnnData, path_hto_gex_mapper: str):
+def translate(adata: AnnData, chemistry: str):
 
     # load pre-built TotalSeq-B/C HTO <--> GEX mapper
+    path_hto_gex_mapper = hto_gex_mapper.decide_which_whitelist(chemistry)
     mapper = hto_gex_mapper.load(path_hto_gex_mapper)
 
     # translate (TotalSeq-B/C HTO <--> GEX)
@@ -53,7 +54,7 @@ def updata_adata(
     path_adata_in: str,
     path_adata_out: str,
     translate_10x_barcodes: bool,
-    path_hto_gex_mapper: str,
+    chemistry: str,
 ):
 
     sc.logging.print_header()
@@ -69,7 +70,7 @@ def updata_adata(
 
     if translate_10x_barcodes:
         logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-        translate(adata, path_hto_gex_mapper)
+        translate(adata, chemistry)
 
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
@@ -112,12 +113,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--hto-gex-mapper",
+        "--chemistry",
         action="store",
-        dest="path_hto_gex_mapper",
-        help="path to TotalSeq-B/C HTO <--> GEX mapper in pickle format",
-        default="data/10x-hto-gex-mapper.pickle",
+        dest="chemistry",
+        help="Chemistry, as specified in the emulsion sheet, helps determine the whitelist.",
+        required=True,
     )
+
 
     # parse arguments
     params = parser.parse_args()
@@ -136,7 +138,7 @@ if __name__ == "__main__":
         path_adata_in=params.path_adata_in,
         path_adata_out=params.path_adata_out,
         translate_10x_barcodes=params.translate_10x_barcodes,
-        path_hto_gex_mapper=params.path_hto_gex_mapper,
+        chemistry=params.chemistry,
     )
 
     logger.info("DONE.")

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-
+import os
 import sys
 import argparse
 import pandas as pd
 import numpy as np
-import yaml
+import json
 import csv
 import gzip
 import logging
@@ -39,7 +39,6 @@ def convert(df, path_hto_gex_mapper):
 
 def translate(
     path_barcodes,
-    path_hto_gex_mapper,
     chemistry,
 ):
     barcodes = pd.read_csv(
@@ -48,9 +47,13 @@ def translate(
 
     logger.info("Loaded barcodes ({})".format(len(barcodes)))
 
+    # evaluate which whitelist to use
+    logger.info(f"Determining which whitelist to use for {chemistry}...")
+    path_hto_gex_mapper = hto_gex_mapper.decide_which_whitelist(chemistry)
+
     # translate HTO barcodes to GEX barcodes
     logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-    df_final = convert(barcodes, path_hto_gex_mapper)
+    df_final = convert(barcodes, path_hto_gex_mapper=path_hto_gex_mapper)
 
     df_final.to_csv("barcodes-translated.tsv.gz", header=None, compression="gzip")
 
@@ -65,14 +68,6 @@ def parse_arguments():
         dest="path_barcodes",
         help="path to barcode file (e.g. 10x's barcodes.tsv.gz)",
         required=True,
-    )
-
-    parser.add_argument(
-        "--hto-gex-mapper",
-        action="store",
-        dest="path_hto_gex_mapper",
-        help="path to TotalSeq-B/C HTO <--> GEX mapper in pickle format",
-        default="data/10x-hto-gex-mapper.pickle",
     )
 
     parser.add_argument(
@@ -97,7 +92,6 @@ if __name__ == "__main__":
 
     translate(
         path_barcodes=params.path_barcodes,
-        path_hto_gex_mapper=params.path_hto_gex_mapper,
         chemistry=params.chemistry,
     )
 
