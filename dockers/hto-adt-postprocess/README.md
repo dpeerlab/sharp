@@ -1,5 +1,9 @@
 # hto-adt-postprocess
 
+## Make GEX <-> HTO mapping a function instead of whitelists
+
+Check new chemistry logic in `src/hto_gex_map_generator.py` which supports GEM X whitelists.
+
 ## Update version
 
 * Update config.sh
@@ -14,7 +18,7 @@ docker run --rm \
     -v $(pwd)/tests:/opt/tests \
     -v $(pwd)/pytest.ini:/opt/pytest.ini \
     -v $(pwd)/test_modules.py:/opt/test_modules.py \
-    sailmskcc/hto-adt-postprocess:0.3.6 \
+    sailmskcc/hto-adt-postprocess:0.3.8 \
     pytest -v
 ```
 
@@ -65,7 +69,7 @@ python3 to_adata.py \
     --sample test \
     --tag-list /tests/tag-list.csv \
     --umi-counts /tests/umi-counts/ \
-    --read-counts /tests/read-counts/
+    --read-counts /tests/read-counts/  # --read-counts is deprecated
 ```
 
 docker login docker.io --username sailmskcc # pw: scri1175$$$
