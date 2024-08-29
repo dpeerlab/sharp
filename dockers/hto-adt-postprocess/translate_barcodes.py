@@ -40,6 +40,7 @@ def convert(df, path_hto_gex_mapper):
 def translate(
     path_barcodes,
     path_hto_gex_mapper,
+    chemistry,
 ):
     barcodes = pd.read_csv(
         path_barcodes, sep="\t", index_col=0, header=None, compression="gzip"
@@ -74,6 +75,14 @@ def parse_arguments():
         default="data/10x-hto-gex-mapper.pickle",
     )
 
+    parser.add_argument(
+        "--chemistry",
+        action="store",
+        dest="chemistry",
+        help="Chemistry, as specified in the emulsion sheet, helps determine the whitelist.",
+        required=True,
+    )
+
     # parse arguments
     params = parser.parse_args()
 
@@ -89,6 +98,7 @@ if __name__ == "__main__":
     translate(
         path_barcodes=params.path_barcodes,
         path_hto_gex_mapper=params.path_hto_gex_mapper,
+        chemistry=params.chemistry,
     )
 
     logger.info("DONE.")
