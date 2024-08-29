@@ -9,10 +9,10 @@
 └── README.md
 ```
 
-## 10x-hto-gex-mapper.pickle
+## Whitelists
 
-Generate by running `hto_gex_mapper.py`. Do not include in the GitHub repository.
+Get all whitelists from the latest cellranger version. ([Instructions](https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist))
 
-## 3M-february-2018.txt.gz
+## WARNING
 
-Download from https://github.com/10XGenomics/cellranger/raw/master/lib/python/cellranger/barcodes/translation/3M-february-2018.txt.gz
+Ensure that translations are symmetrical (i.e. GEX -> HTO -> GEX yields the same GEX as the original GEX).
