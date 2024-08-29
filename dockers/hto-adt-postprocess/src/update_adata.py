@@ -2,15 +2,11 @@
 # coding: utf-8
 
 import sys
-import os
 import argparse
 import logging
-import csv
-import gzip
 from anndata._core.anndata import AnnData
-import scanpy as sc
+import anndata as ad
 import pandas as pd
-from tqdm import tqdm
 from dna3bit import DNA3Bit
 import hto_gex_mapper
 
@@ -57,10 +53,8 @@ def updata_adata(
     chemistry: str,
 ):
 
-    sc.logging.print_header()
-
     logger.info(f"Loading AnnData {path_adata_in}...")
-    adata = sc.read_h5ad(path_adata_in)
+    adata = ad.read_h5ad(path_adata_in)
 
     logger.info("Loading classification...")
     df_class = pd.read_csv(path_class, sep="\t", index_col=0, compression="gzip")

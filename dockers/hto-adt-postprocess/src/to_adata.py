@@ -6,9 +6,8 @@ import os
 import argparse
 import logging
 
-import scanpy as sc
+import anndata as ad
 import pandas as pd
-import numpy as np
 import scipy.io
 
 from dna3bit import DNA3Bit
@@ -28,9 +27,7 @@ logging.basicConfig(
 )
 
 
-def to_adata(sample_name, path_tag_list, path_umi_counts, path_read_counts):
-
-    sc.logging.print_header()
+def to_adata(sample_name, path_tag_list, path_umi_counts):
 
     logger.info("Loading tag list...")
     df_tags = pd.read_csv(
@@ -55,7 +52,7 @@ def to_adata(sample_name, path_tag_list, path_umi_counts, path_read_counts):
     logger.info("Generating AnnData...")
     # convert to AnnData
     # exclude `unmapped` column
-    adata = sc.AnnData(
+    adata = ad.AnnData(
         mtx_umi.T.tocsr()[:, :-1], dtype="int64", obs=barcodes, var=features.iloc[:-1]
     )
 
@@ -108,14 +105,6 @@ def parse_arguments():
         required=True,
     )
 
-    parser.add_argument(
-        "--read-counts",
-        action="store",
-        dest="path_read_counts",
-        help="path to read counts (e.g. read-counts/)",
-        required=True,
-    )
-
     # parse arguments
     params = parser.parse_args()
 
@@ -132,7 +121,6 @@ if __name__ == "__main__":
         sample_name=params.sample_name,
         path_tag_list=params.path_tag_list,
         path_umi_counts=params.path_umi_counts,
-        path_read_counts=params.path_read_counts,
     )
 
     logger.info("DONE.")
