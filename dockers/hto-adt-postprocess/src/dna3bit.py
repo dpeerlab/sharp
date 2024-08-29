@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 class DNA3Bit(object):
     """
     Compact 3-bit encoding scheme for sequence data.
@@ -9,13 +10,30 @@ class DNA3Bit(object):
     def bits_per_base():
         return 3
 
-# TODO: The sam reader needs to be fixed so text files are read as text not binary
-    str2bindict = {65: 0b100, 67: 0b110, 71: 0b101, 84: 0b011, 78: 0b111,
-                   97: 0b100, 99: 0b110, 103: 0b101, 116: 0b011, 110: 0b111,
-                   'A': 0b100, 'C': 0b110, 'G': 0b101, 'T': 0b011, 'N': 0b111,
-                   'a': 0b100, 'c': 0b110, 'g': 0b101, 't': 0b011, 'n': 0b111}
-    bin2strdict = {0b100: b'A', 0b110: b'C',
-                   0b101: b'G', 0b011: b'T', 0b111: b'N'}
+    # TODO: The sam reader needs to be fixed so text files are read as text not binary
+    str2bindict = {
+        65: 0b100,
+        67: 0b110,
+        71: 0b101,
+        84: 0b011,
+        78: 0b111,
+        97: 0b100,
+        99: 0b110,
+        103: 0b101,
+        116: 0b011,
+        110: 0b111,
+        "A": 0b100,
+        "C": 0b110,
+        "G": 0b101,
+        "T": 0b011,
+        "N": 0b111,
+        "a": 0b100,
+        "c": 0b110,
+        "g": 0b101,
+        "t": 0b011,
+        "n": 0b111,
+    }
+    bin2strdict = {0b100: b"A", 0b110: b"C", 0b101: b"G", 0b011: b"T", 0b111: b"N"}
 
     @staticmethod
     def encode(b) -> int:
@@ -39,10 +57,9 @@ class DNA3Bit(object):
         :param i: int, encoded sequence to be converted back to nucleotides
         """
         if i < 0:
-            message = 'i must be an unsigned (positive) integer, not {0!s}'.format(
-                i)
+            message = "i must be an unsigned (positive) integer, not {0!s}".format(i)
             raise ValueError(message)
-        r = b''
+        r = b""
         while i > 0:
             r = DNA3Bit.bin2strdict[i & 0b111] + r
             i >>= 3
@@ -56,11 +73,11 @@ class DNA3Bit(object):
 
         :param i: int, encoded sequence
         """
-        l = 0
+        length = 0
         while i > 0:
-            l += 1
+            length += 1
             i >>= 3
-        return l
+        return length
 
     @staticmethod
     def contains(s: int, char: int) -> bool:
@@ -106,8 +123,10 @@ class DNA3Bit(object):
         char needs to be an encoded value of one of the bases.
         """
         if char_bin not in DNA3Bit.bin2strdict.keys():
-            raise ValueError("DNA3Bit.count was called with an invalid char code - "
-                             "{}".format(char_bin))
+            raise ValueError(
+                "DNA3Bit.count was called with an invalid char code - "
+                "{}".format(char_bin)
+            )
         res = 0
         while seq > 0:
             if seq & 0b111 == char_bin:

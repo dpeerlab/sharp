@@ -16,18 +16,17 @@ logging.basicConfig(
     ],
 )
 
+
 def translate_barcodes(barcodes, chemistry: str):
-    
+
     # get whitelist
     path_translation = decide_which_whitelist(chemistry)
-    
+
     # translate
-    translation_df = pd.read_csv(
-        path_translation, sep="\t", index_col=0, header=None
-    )
-    
+    translation_df = pd.read_csv(path_translation, sep="\t", index_col=0, header=None)
+
     translated_barcodes = translation_df.loc[barcodes].values.flatten()
-    
+
     return translated_barcodes
 
 
@@ -49,11 +48,11 @@ def translate(
     )
 
     logger.info("Loaded barcodes ({})".format(len(barcodes)))
-    
+
     # translate HTO barcodes to GEX barcodes
     logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
     df_final = convert(barcodes, chemistry)
-    
+
     df_final.to_csv("barcodes-translated.tsv.gz", header=None, compression="gzip")
 
 

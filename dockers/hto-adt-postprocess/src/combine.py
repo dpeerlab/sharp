@@ -16,6 +16,7 @@ logging.basicConfig(
     handlers=[logging.FileHandler("combine.log"), logging.StreamHandler(sys.stdout)],
 )
 
+
 def convert(df, chemistry):
 
     encoder_decoder = DNA3Bit()

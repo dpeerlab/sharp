@@ -18,19 +18,26 @@ def base_path(request):
         base_path = "/opt"
     return base_path
 
+
 @pytest.fixture
 def path_test_data():
     yield "tests"
 
+
 def test_whitelist_path(base_path):
     """Test whitelist path"""
-    path_v3 = translate_10x_barcodes.decide_which_whitelist("test-small-v3", base_path=base_path)
-    path_v4 = translate_10x_barcodes.decide_which_whitelist("test-small-v4", base_path=base_path)
+    path_v3 = translate_10x_barcodes.decide_which_whitelist(
+        "test-small-v3", base_path=base_path
+    )
+    path_v4 = translate_10x_barcodes.decide_which_whitelist(
+        "test-small-v4", base_path=base_path
+    )
 
     assert os.path.exists(path_v3)
     assert os.path.exists(path_v4)
     assert path_v3 == os.path.join(base_path, "data/test-small-v3.txt")
     assert path_v4 == os.path.join(base_path, "data/test-small-v4.txt")
+
 
 def test_translate_barcodes_v3():
     """Test translation of barcodes"""
@@ -49,6 +56,7 @@ def test_translate_barcodes_v3():
     assert translated[0] == "AAACCCATCAAACACT"
     assert translated[1] == "AAACCCATCAAACTGC"
 
+
 def test_translate_barcodes_v4():
     """Test translation of barcodes"""
 
@@ -61,6 +69,7 @@ def test_translate_barcodes_v4():
     assert len(translated) == len(barcodes)
     assert translated[0] == "AATGAGGTCCATGTCC"
     assert translated[1] == "AATGAGGTCCTGGTAG"
+
 
 def test_hto_gex_translation_v3():
     """Test V3 translation"""
@@ -113,14 +122,11 @@ def test_hto_gex_translation_large(path_test_data):
         compression="gzip",
     )
 
-
-    translated = translate_barcodes.convert(
-        df=barcodes,
-        chemistry="10x V3.1 Hashtag"
-    )
+    translated = translate_barcodes.convert(df=barcodes, chemistry="10x V3.1 Hashtag")
 
     assert test_bc in barcodes.index, f"Barcode' {test_bc}' not found in test data..."
     assert translated.index[barcodes.index == test_bc][0] == "GCGAGAACAAGACCGA"
+
 
 def test_hto_gex_translation_duplicates(path_test_data):
     """Test multiple identical barcodes"""
@@ -138,10 +144,11 @@ def test_hto_gex_translation_duplicates(path_test_data):
         chemistry="test-small-v4",
     )
 
-    assert len(translated) == len(barcodes), f"Expected {len(barcodes)} barcodes, got {len(translated)}"
+    assert len(translated) == len(
+        barcodes
+    ), f"Expected {len(barcodes)} barcodes, got {len(translated)}"
     assert translated.iloc[0].name == "AATGAGGTCCATGTCC"
     assert translated.iloc[1].name == "AATGAGGTCCATGTCC"
-
 
 
 def test_hto_gex_10x_translation(path_test_data, base_path):
@@ -152,12 +159,16 @@ def test_hto_gex_10x_translation(path_test_data, base_path):
         separator=",",
         has_header=False,
         base_path=base_path,
-        debug=True
+        debug=True,
     )
     assert os.path.exists("translated-barcodes.txt")
 
-    translated_barcodes = pd.read_csv("translated-barcodes.txt", header=None, index_col=0)
-    assert translated_barcodes.shape[0] == 3, f"Expected 3 barcodes, got {translated_barcodes.shape[0]}"
+    translated_barcodes = pd.read_csv(
+        "translated-barcodes.txt", header=None, index_col=0
+    )
+    assert (
+        translated_barcodes.shape[0] == 3
+    ), f"Expected 3 barcodes, got {translated_barcodes.shape[0]}"
 
     os.remove("translated-barcodes.txt")
 
@@ -168,7 +179,11 @@ def get_adata(path_test_data, use_acgt=False):
     path_umi_counts = os.path.join(path_test_data, "citeseq", "umi-counts")
 
     # to adata
-    to_adata.to_adata(sample_name="adata", path_tag_list=path_tag_list, path_umi_counts=path_umi_counts)
+    to_adata.to_adata(
+        sample_name="adata",
+        path_tag_list=path_tag_list,
+        path_umi_counts=path_umi_counts,
+    )
 
     adata = ad.read("adata.h5ad")
     if use_acgt:
@@ -176,6 +191,7 @@ def get_adata(path_test_data, use_acgt=False):
         adata.write("adata.h5ad")
 
     return adata
+
 
 def test_to_adata(path_test_data):
 
@@ -188,6 +204,7 @@ def test_to_adata(path_test_data):
 
     os.remove("adata.h5ad")
 
+
 def test_subset_adata(path_test_data):
 
     adata = get_adata(path_test_data, use_acgt=True)
@@ -198,9 +215,10 @@ def test_subset_adata(path_test_data):
         path_adata_in="adata.h5ad",
         path_adata_out="adata.h5ad",
         path_cb_whitelist=path_cb_whitelist,
-        convert=False
+        convert=False,
     )
 
     adata = ad.read("adata.h5ad")
+    assert adata is not None
 
     os.remove("adata.h5ad")

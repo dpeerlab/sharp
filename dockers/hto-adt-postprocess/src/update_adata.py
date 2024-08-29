@@ -28,7 +28,9 @@ logging.basicConfig(
 def translate(adata: AnnData, chemistry: str):
 
     # translate (TotalSeq-B/C HTO <--> GEX)
-    translated_barcodes = translate_barcodes(adata.obs["barcode_sequence"].values, chemistry=chemistry)
+    translated_barcodes = translate_barcodes(
+        adata.obs["barcode_sequence"].values, chemistry=chemistry
+    )
 
     # encode nucleotide barcodes into numerical barcodes
     dna3bit = DNA3Bit()

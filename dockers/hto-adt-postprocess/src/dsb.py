@@ -3,7 +3,6 @@ import argparse
 import logging
 import anndata as ad
 
-from muon import prot as pt
 
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
@@ -19,6 +18,7 @@ logging.basicConfig(
     ],
 )
 
+
 def dsb(
     path_adata_filtered_in: str,
     path_adata_raw_in: str,
@@ -28,9 +28,9 @@ def dsb(
     adata_filtered = ad.read_h5ad(path_adata_filtered_in)
 
     logger.info(f"Loading AnnData {path_adata_raw_in}...")
-    adata_raw = ad.read_h5ad(path_adata_raw_in)
+    # adata_raw = ad.read_h5ad(path_adata_raw_in)
 
-    logger.info(f"Running DSB...")
+    logger.info("Running DSB...")
     # TODO: CHANGE THIS
     adata_filtered = adata_filtered
 
@@ -69,6 +69,7 @@ def parse_arguments():
     # parse arguments
     params = parser.parse_args()
     return params
+
 
 if __name__ == "__main__":
 

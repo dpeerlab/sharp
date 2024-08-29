@@ -27,6 +27,7 @@ def decode(barcodes):
 
     return decoded
 
+
 def decide_which_whitelist(chemistry, base_path="/opt"):
     """
     Based on 10x information, decide which whitelist to use. (https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist-)
@@ -45,7 +46,10 @@ def decide_which_whitelist(chemistry, base_path="/opt"):
     else:
         raise ValueError("Chemistry {} not supported yet.".format(chemistry))
 
-def translate(path_input, chemistry, separator, has_header, debug=False, base_path="/opt"):
+
+def translate(
+    path_input, chemistry, separator, has_header, debug=False, base_path="/opt"
+):
 
     df = pd.read_csv(path_input, sep=separator, header=0 if has_header else None)
 
@@ -62,7 +66,7 @@ def translate(path_input, chemistry, separator, has_header, debug=False, base_pa
     # write translated barcodes
     path_10x_whitelist = decide_which_whitelist(chemistry, base_path=base_path)
     whitelist = pd.read_csv(path_10x_whitelist, sep="\t", header=None)
-    whitelist = whitelist.loc[whitelist.iloc[:, 0].isin(barcodes)] # subset
+    whitelist = whitelist.loc[whitelist.iloc[:, 0].isin(barcodes)]  # subset
     whitelist.iloc[:, [1]].to_csv("translated-barcodes.txt", index=False, header=None)
 
     # outputs
@@ -76,7 +80,9 @@ def translate(path_input, chemistry, separator, has_header, debug=False, base_pa
         if debug:
             print(barcodes)
             print(whitelist)
-            raise ValueError(f"Number of pre-/post-translated barcodes is different! {n} vs {m}")
+            raise ValueError(
+                f"Number of pre-/post-translated barcodes is different! {n} vs {m}"
+            )
         else:
             exit(1)
 

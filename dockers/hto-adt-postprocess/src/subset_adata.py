@@ -23,14 +23,18 @@ logging.basicConfig(
     ],
 )
 
+
 def assert_cellbarcodes(barcodes, top_k=1000):
     """
     Assert that cell barcodes only contain ACGT and unique.
     """
     for i, barcode in enumerate(barcodes[:top_k]):
         if not barcode.isalnum():
-            logger.warning(f"Cell barcode '{barcode}' contains non-alphanumeric characters.")
+            logger.warning(
+                f"Cell barcode '{barcode}' contains non-alphanumeric characters."
+            )
     assert len(barcodes) == len(set(barcodes)), "Cell barcodes are not unique."
+
 
 def convert_barcodes(x):
     """
@@ -39,6 +43,7 @@ def convert_barcodes(x):
     encoder_decoder = DNA3Bit()
     x = map(lambda i: encoder_decoder.decode(int(i)).decode(), x)
     return list(x)
+
 
 def subset_adata(
     path_adata_in: str,
@@ -49,15 +54,14 @@ def subset_adata(
     """
     Subset an AnnData object to only include cells in a given whitelist. This only works with alphanumeric cell barcodes.
     """
-        
-    
+
     logger.info(f"Loading AnnData {path_adata_in}...")
     adata = ad.read_h5ad(path_adata_in)
 
     logger.info(f"Loading cell barcode whitelist {path_cb_whitelist}...")
     cb_whitelist = pd.read_csv(path_cb_whitelist, header=None, index_col=0).index.values
 
-    logger.info(f"Converting cell barcode whitelist to DNA3Bit...")
+    logger.info("Converting cell barcode whitelist to DNA3Bit...")
     if convert:
         adata.obs_names = convert_barcodes(adata.obs_names)
 
@@ -68,13 +72,16 @@ def subset_adata(
     logger.info("Subsetting AnnData...")
     cb_whitelist_clean = list(set(cb_whitelist).intersection(set(adata.obs_names)))
     adata = adata[cb_whitelist_clean]
-    
+
     difference = set(cb_whitelist) - set(cb_whitelist_clean)
     if len(difference) > 0:
-        logger.warning(f"Cell barcodes ({len(difference)}) are not in the AnnData object:  {' '.join(difference)}. Ignoring them.")
-        
+        logger.warning(
+            f"Cell barcodes ({len(difference)}) are not in the AnnData object:  {' '.join(difference)}. Ignoring them."
+        )
+
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
+
 
 def parse_arguments():
 
@@ -95,7 +102,7 @@ def parse_arguments():
         help="path to output AnnData (.h5ad)",
         required=True,
     )
-    
+
     parser.add_argument(
         "--cb-whitelist",
         action="store",
