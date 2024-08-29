@@ -1,0 +1,25 @@
+{
+    "3M-february-2018.txt.gz": [
+        "10x V3.1",
+        "10x V3.1 Hashtag",
+        "10x V3 target enrichment"
+    ],
+    "3M-3pgex-may-2023.txt.gz": [
+        "10x V4",
+        "10x V4 Hashtag"
+    ],
+    "3M-5pgex-jan-2023.txt.gz": [
+        "5' V3"
+    ],
+    "737k-august-2016.txt": [
+        "5' V2"
+    ],
+    "737k-arc-v1.txt.gz": [
+        "10x Multiome snRNA",
+        "10x Multiome scATAC",
+        "scATAC v1.1"
+    ],
+    "737k-fixed-rna-profiling.txt.gz": [
+        "10x Fixed"
+    ]
+}

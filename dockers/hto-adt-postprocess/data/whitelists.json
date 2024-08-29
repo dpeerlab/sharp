@@ -1,0 +1,17 @@
+{
+    "3M-february-2018.txt.gz": [
+        "10x V3.1",
+        "10x V3.1 Hashtag",
+        "10x V3 target enrichment"
+    ],
+    "3M-3pgex-may-2023.txt.gz": [
+        "10x V4",
+        "10x V4 Hashtag"
+    ],
+    "test-small-v3.txt": [
+        "test-small-v3"
+    ],
+    "test-small-v4.txt": [
+        "test-small-v4"
+    ]
+}
