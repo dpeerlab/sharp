@@ -1,15 +1,9 @@
 #!/usr/bin/env python
-import os
 import sys
 import argparse
 import pandas as pd
-import numpy as np
-import json
-import csv
-import gzip
 import logging
-from tqdm import tqdm
-import hto_gex_mapper
+from hto_gex_mapper import decide_which_whitelist
 
 logger = logging.getLogger("translate_barcodes")
 
@@ -22,19 +16,28 @@ logging.basicConfig(
     ],
 )
 
+def translate_barcodes(barcodes, chemistry: str):
+    
+    # get whitelist
+    path_translation = decide_which_whitelist(chemistry)
+    
+    # translate
+    translation_df = pd.read_csv(
+        path_translation, sep="\t", index_col=0, header=None
+    )
+    
+    translated_barcodes = translation_df.loc[barcodes].values.flatten()
+    
+    return translated_barcodes
 
-def convert(df, path_hto_gex_mapper):
 
-    # load pre-built 10x HTO <--> GEX mapper
-    mapper = hto_gex_mapper.load(path_hto_gex_mapper)
+def convert(df, chemistry: str):
 
     # translate
-    translated_barcodes = df.index.map(lambda x: mapper[x])
+    index_new = translate_barcodes(df.index, chemistry)
+    df_out = df.set_index(index_new)
 
-    df2 = df.copy()
-    df2.index = translated_barcodes
-
-    return df2
+    return df_out
 
 
 def translate(
@@ -46,15 +49,11 @@ def translate(
     )
 
     logger.info("Loaded barcodes ({})".format(len(barcodes)))
-
-    # evaluate which whitelist to use
-    logger.info(f"Determining which whitelist to use for {chemistry}...")
-    path_hto_gex_mapper = hto_gex_mapper.decide_which_whitelist(chemistry)
-
+    
     # translate HTO barcodes to GEX barcodes
     logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-    df_final = convert(barcodes, path_hto_gex_mapper=path_hto_gex_mapper)
-
+    df_final = convert(barcodes, chemistry)
+    
     df_final.to_csv("barcodes-translated.tsv.gz", header=None, compression="gzip")
 
 

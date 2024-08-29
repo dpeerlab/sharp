@@ -49,8 +49,8 @@ def subset_adata(
     """
     Subset an AnnData object to only include cells in a given whitelist. This only works with alphanumeric cell barcodes.
     """
-
-
+        
+    
     logger.info(f"Loading AnnData {path_adata_in}...")
     adata = ad.read_h5ad(path_adata_in)
 
@@ -68,11 +68,11 @@ def subset_adata(
     logger.info("Subsetting AnnData...")
     cb_whitelist_clean = list(set(cb_whitelist).intersection(set(adata.obs_names)))
     adata = adata[cb_whitelist_clean]
-
+    
     difference = set(cb_whitelist) - set(cb_whitelist_clean)
     if len(difference) > 0:
         logger.warning(f"Cell barcodes ({len(difference)}) are not in the AnnData object:  {' '.join(difference)}. Ignoring them.")
-
+        
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
 
@@ -95,7 +95,7 @@ def parse_arguments():
         help="path to output AnnData (.h5ad)",
         required=True,
     )
-
+    
     parser.add_argument(
         "--cb-whitelist",
         action="store",

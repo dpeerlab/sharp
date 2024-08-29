@@ -3,14 +3,10 @@
 import sys
 import argparse
 import pandas as pd
-import numpy as np
 import yaml
-import csv
-import gzip
 import logging
 from dna3bit import DNA3Bit
-from tqdm import tqdm
-import hto_gex_mapper
+from translate_barcodes import translate_barcodes
 
 logger = logging.getLogger("combine")
 
@@ -20,19 +16,15 @@ logging.basicConfig(
     handlers=[logging.FileHandler("combine.log"), logging.StreamHandler(sys.stdout)],
 )
 
-
-def convert(df, path_hto_gex_mapper):
+def convert(df, chemistry):
 
     encoder_decoder = DNA3Bit()
 
     # 1234 barcodes to acgt barcodes
     acgt_barcodes = df.index.map(lambda x: encoder_decoder.decode(x).decode())
 
-    # load pre-built TotalSeq-B/C HTO <--> GEX mapper
-    mapper = hto_gex_mapper.load(path_hto_gex_mapper)
-
     # translate
-    translated_acgt_barcodes = acgt_barcodes.map(lambda x: mapper[x])
+    translated_acgt_barcodes = translate_barcodes(acgt_barcodes, chemistry=chemistry)
 
     # acgt barcodes to 1234 barcodes
     translated_1234_barcodes = translated_acgt_barcodes.map(
@@ -48,7 +40,7 @@ def combine(
     path_dense_count_matrix,
     path_hto_classification,
     translate_10x_barcodes,
-    path_hto_gex_mapper,
+    chemistry,
 ):
 
     df_gene = pd.read_csv(path_dense_count_matrix, index_col=0)
@@ -74,7 +66,7 @@ def combine(
     # translate HTO barcodes to GEX barcodes
     if translate_10x_barcodes:
         logger.info("Translating TotalSeq-B/C HTO barcodes to GEX barcodes...")
-        df_class = convert(df_class, path_hto_gex_mapper)
+        df_class = convert(df_class, chemistry)
 
     df_merged = pd.merge(
         df_gene, df_class, left_index=True, right_index=True, how="inner"
@@ -138,11 +130,11 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--hto-gex-mapper",
+        "--chemistry",
         action="store",
-        dest="path_hto_gex_mapper",
-        help="path to TotalSeq-B/C HTO <--> GEX mapper in pickle format",
-        default="data/10x-hto-gex-mapper.pickle",
+        dest="chemistry",
+        help="Chemistry, as specified in the emulsion sheet, helps determine the whitelist.",
+        required=True,
     )
 
     # parse arguments
@@ -161,7 +153,7 @@ if __name__ == "__main__":
         path_dense_count_matrix=params.path_dense_count_matrix,
         path_hto_classification=params.path_hto_classification,
         translate_10x_barcodes=params.translate_10x_barcodes,
-        path_hto_gex_mapper=params.path_hto_gex_mapper,
+        chemistry=params.chemistry,
     )
 
     logger.info("Writing statistics...")

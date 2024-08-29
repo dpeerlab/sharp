@@ -8,7 +8,7 @@ from anndata._core.anndata import AnnData
 import anndata as ad
 import pandas as pd
 from dna3bit import DNA3Bit
-import hto_gex_mapper
+from translate_barcodes import translate_barcodes
 
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
@@ -27,15 +27,8 @@ logging.basicConfig(
 
 def translate(adata: AnnData, chemistry: str):
 
-    # load pre-built TotalSeq-B/C HTO <--> GEX mapper
-    path_hto_gex_mapper = hto_gex_mapper.decide_which_whitelist(chemistry)
-    mapper = hto_gex_mapper.load(path_hto_gex_mapper)
-
     # translate (TotalSeq-B/C HTO <--> GEX)
-    translated_barcodes = list(
-        map(lambda x: mapper[x], adata.obs["barcode_sequence"].values)
-    )
-    adata.obs["barcode_sequence"] = translated_barcodes
+    translated_barcodes = translate_barcodes(adata.obs["barcode_sequence"].values, chemistry=chemistry)
 
     # encode nucleotide barcodes into numerical barcodes
     dna3bit = DNA3Bit()
@@ -64,7 +57,7 @@ def updata_adata(
 
     if translate_10x_barcodes:
         logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-        translate(adata, chemistry)
+        translate(adata, chemistry=chemistry)
 
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
@@ -113,7 +106,6 @@ def parse_arguments():
         help="Chemistry, as specified in the emulsion sheet, helps determine the whitelist.",
         required=True,
     )
-
 
     # parse arguments
     params = parser.parse_args()
