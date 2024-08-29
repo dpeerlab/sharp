@@ -1,5 +1,5 @@
 #FROM ubuntu:20.04
-FROM python:3.9-slim-bullseye
+FROM python:3.12-slim-bullseye
 
 LABEL maintainer="Tobias Krause (krauset@mskcc.org)"
 

@@ -27,22 +27,25 @@ def decode(barcodes):
 
     return decoded
 
-def decide_which_whitelist(chemistry):
+def decide_which_whitelist(chemistry, base_path="/opt"):
     """
     Based on 10x information, decide which whitelist to use. (https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist-)
-    Chemistries are defined in the emulsion sheet. 
+    Chemistries are defined in the emulsion sheet.
     Not all whitelists are supported yet.
+
+    Argument `base_path` describes where to find the whitelist json. Will be
+    changed when tested locally with `pytest --local`.
     """
-    with open("/opt/data/whitelists.json") as fin:
+    with open(os.path.join(base_path, "data/whitelists.json")) as fin:
         whitelists = json.load(fin)
-    
+
     for file, chemistries in whitelists.items():
         if chemistry in chemistries:
-            return os.path.join("/opt/data", file)
+            return os.path.join(base_path, "data", file)
     else:
         raise ValueError("Chemistry {} not supported yet.".format(chemistry))
-    
-def translate(path_input, chemistry, separator, has_header, debug=False):
+
+def translate(path_input, chemistry, separator, has_header, debug=False, base_path="/opt"):
 
     df = pd.read_csv(path_input, sep=separator, header=0 if has_header else None)
 
@@ -55,13 +58,13 @@ def translate(path_input, chemistry, separator, has_header, debug=False):
         # SEQC outputs numerical barcode.
         # decode back to nucleotide sequence
         barcodes = decode(barcodes)
-    
+
     # write translated barcodes
-    path_10x_whitelist = decide_which_whitelist(chemistry)
+    path_10x_whitelist = decide_which_whitelist(chemistry, base_path=base_path)
     whitelist = pd.read_csv(path_10x_whitelist, sep="\t", header=None)
     whitelist = whitelist.loc[whitelist.iloc[:, 0].isin(barcodes)] # subset
     whitelist.iloc[:, [1]].to_csv("translated-barcodes.txt", index=False, header=None)
-    
+
     # outputs
     n = len(barcodes)
     m = len(whitelist)

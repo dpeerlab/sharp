@@ -26,16 +26,17 @@ def dsb(
 ):
     logger.info(f"Loading AnnData {path_adata_filtered_in}...")
     adata_filtered = ad.read_h5ad(path_adata_filtered_in)
-    
+
     logger.info(f"Loading AnnData {path_adata_raw_in}...")
     adata_raw = ad.read_h5ad(path_adata_raw_in)
-    
+
     logger.info(f"Running DSB...")
-    pt.pp.dsb(adata_filtered, adata_raw, add_layer=True)
-    
+    # TODO: CHANGE THIS
+    adata_filtered = adata_filtered
+
     logger.info(f"Saving AnnData {path_adata_out}...")
     adata_filtered.write(path_adata_out)
-    
+
 
 def parse_arguments():
 
@@ -48,7 +49,7 @@ def parse_arguments():
         help="path to filtered input AnnData (.h5ad)",
         required=True,
     )
-    
+
     parser.add_argument(
         "--adata-raw-in",
         action="store",
@@ -56,7 +57,7 @@ def parse_arguments():
         help="path to raw input AnnData (.h5ad)",
         required=True,
     )
-    
+
     parser.add_argument(
         "--adata-out",
         action="store",
@@ -64,7 +65,7 @@ def parse_arguments():
         help="path to output AnnData (.h5ad)",
         required=True,
     )
-    
+
     # parse arguments
     params = parser.parse_args()
     return params
@@ -82,5 +83,3 @@ if __name__ == "__main__":
     )
 
     logger.info("DONE.")
-    
-    
