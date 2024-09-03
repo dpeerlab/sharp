@@ -1,7 +1,7 @@
 #FROM ubuntu:20.04
 FROM python:3.12-slim-bullseye
 
-LABEL maintainer="Tobias Krause (krauset@mskcc.org)"
+LABEL maintainer="Tobias Krause (krauset@mskcc.org), Hussen Mohammed Ibrahim (ibrahih3@mskcc.org)"
 
 # install
 COPY requirements.txt /requirements.txt
@@ -12,7 +12,7 @@ COPY src/* /opt/
 
 # data
 COPY ./data/3M-february-2018.txt.gz /opt/data/
-COPY ./data/10x-hto-gex-mapper.pickle /opt/data/10x-hto-gex-mapper.pickle
+COPY ./data/3M-3pgex-may-2023.txt.gz /opt/data/
 
 # setup
 WORKDIR /opt

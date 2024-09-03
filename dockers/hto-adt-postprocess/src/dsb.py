@@ -3,6 +3,7 @@ import argparse
 import logging
 import anndata as ad
 
+from dsb_algorithm import dsb_adapted
 
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
@@ -28,11 +29,10 @@ def dsb(
     adata_filtered = ad.read_h5ad(path_adata_filtered_in)
 
     logger.info(f"Loading AnnData {path_adata_raw_in}...")
-    # adata_raw = ad.read_h5ad(path_adata_raw_in)
+    adata_raw = ad.read_h5ad(path_adata_raw_in)
 
     logger.info("Running DSB...")
-    # TODO: CHANGE THIS
-    adata_filtered = adata_filtered
+    dsb_adapted(adata_filtered, adata_raw, add_layer=True)
 
     logger.info(f"Saving AnnData {path_adata_out}...")
     adata_filtered.write(path_adata_out)
