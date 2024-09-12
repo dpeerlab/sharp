@@ -59,7 +59,7 @@ def dsb_adapted(
     add_layer: bool = True,
 ) -> ad.AnnData:
     """
-    Custom implementation of the DSB (Data-driven Selection of Background) algorithm.
+    Custom implementation of the DSB (Denoised and Sclaed by Background) algorithm.
 
     Parameters:
     -----------
@@ -100,7 +100,6 @@ def dsb_adapted(
     if scipy.sparse.issparse(empty_drop_matrix):
         empty_drop_matrix = empty_drop_matrix.toarray()
 
-    # If you need to preserve the row and column names
     cell_protein_matrix = pd.DataFrame(
         cell_protein_matrix,
         index=adata_filtered.obs_names,
@@ -144,7 +143,7 @@ def dsb_adapted(
         gmm = GaussianMixture(n_components=2, random_state=0)
         gmm.fit(cell_data)
 
-        # Identify the background component (usually the one with lower mean)
+        # Identify the background component (the one with lower mean)
         background_component_mean = min(gmm.means_)[0]
         background_means.append(background_component_mean)
 
