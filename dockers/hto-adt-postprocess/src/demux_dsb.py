@@ -204,6 +204,14 @@ def parse_arguments():
         default="kmeans",
     )
 
+    parser.add_argument(
+        "--output-dir",
+        action="store",
+        dest="output_dir",
+        help="directory to save output files",
+        required=True,
+    )
+
     # parse arguments
     params = parser.parse_args()
 
@@ -221,8 +229,15 @@ if __name__ == "__main__":
         method=params.method,
     )
 
-    logger.info("Writing statistics...")
+    # Create output directory if it doesn't exist
+    os.makedirs(params.output_dir, exist_ok=True)
 
-    write_stats(adata_result.obs, adata_result.uns['metrics'])
+    stats_file = os.path.join(params.output_dir, "stats.yml")
+    write_stats(adata_result.obs, adata_result.uns['metrics'], output_file=stats_file)
 
+    logger.info("Saving AnnData result...")
+    adata_output_file = os.path.join(params.output_dir, "demux_result.h5ad")
+    adata_result.write(adata_output_file)
+
+    logger.info(f"Results saved to {params.output_dir}")
     logger.info("DONE.")
