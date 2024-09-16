@@ -55,8 +55,7 @@ def dsb_adapted(
     adata_raw: ad.AnnData,
     pseudocount: int = 10,
     denoise_counts: bool = True,
-    use_isotype_controls: bool = None,
-    add_layer: bool = True,
+    use_isotype_controls: bool = None
 ) -> ad.AnnData:
     """
     Custom implementation of the DSB (Denoised and Sclaed by Background) algorithm.
@@ -73,8 +72,6 @@ def dsb_adapted(
         Flag indicating whether to perform denoising. Default is True.
     use_isotype_controls : bool, optional
         Placeholder for isotype controls. Default is None.
-    add_layer : bool, optional
-        If True, adds the DSB-normalized data as a new layer in adata_filtered.
 
     Returns:
     --------
@@ -125,10 +122,7 @@ def dsb_adapted(
     normalized_matrix = (adt_log - mu_empty) / sd_empty
 
     if not denoise_counts:
-        if add_layer:
-            adata_filtered.layers["dsb_normalized"] = normalized_matrix
-        else:
-            adata_filtered.X = normalized_matrix
+        adata_filtered.layers["dsb_normalized"] = normalized_matrix
 
         return adata_filtered
 
@@ -152,9 +146,6 @@ def dsb_adapted(
     norm_adt = remove_batch_effect(normalized_matrix, covariates=background_means)
 
     # After computing norm_adt, update the AnnData object
-    if add_layer:
-        adata_filtered.layers["dsb_normalized"] = norm_adt
-    else:
-        adata_filtered.X = norm_adt
+    adata_filtered.layers["dsb_normalized"] = norm_adt
 
     return adata_filtered

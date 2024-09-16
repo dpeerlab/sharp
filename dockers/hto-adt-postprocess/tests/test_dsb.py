@@ -46,7 +46,7 @@ def test_dsb_adapted_basic(test_datasets):
     adata_filtered, adata_raw = test_datasets
 
     # Run the dsb_adapted function
-    adata_result = dsb_adapted(adata_filtered, adata_raw, pseudocount=1, denoise_counts=False, add_layer=True)
+    adata_result = dsb_adapted(adata_filtered, adata_raw, pseudocount=1, denoise_counts=False)
 
     # Verify that the dsb_normalized layer is added and has expected dimensions
     assert "dsb_normalized" in adata_result.layers
@@ -64,13 +64,13 @@ def test_dsb_adapted_denoising(test_datasets):
     adata_filtered_for_denoised = adata_filtered_original.copy()
 
     # Run the dsb_adapted function with denoising
-    adata_result_denoised = dsb_adapted(adata_filtered_for_denoised, adata_raw, pseudocount=1, denoise_counts=True, add_layer=True)
+    adata_result_denoised = dsb_adapted(adata_filtered_for_denoised, adata_raw, pseudocount=1, denoise_counts=True)
 
     # Create another copy for the non-denoised version
     adata_filtered_for_non_denoised = adata_filtered_original.copy()
 
     # Run the dsb_adapted function without denoising
-    adata_result_no_denoise = dsb_adapted(adata_filtered_for_non_denoised, adata_raw, pseudocount=1, denoise_counts=False, add_layer=True)
+    adata_result_no_denoise = dsb_adapted(adata_filtered_for_non_denoised, adata_raw, pseudocount=1, denoise_counts=False)
 
     # Verify that the dsb_normalized layer is added and has expected dimensions
     assert "dsb_normalized" in adata_result_denoised.layers
@@ -98,20 +98,8 @@ def test_dsb_adapted_sparse_input(test_datasets):
     adata_raw.X = sparse.csr_matrix(adata_raw.X)
 
     # Run the dsb_adapted function
-    adata_result = dsb_adapted(adata_filtered, adata_raw, pseudocount=1, denoise_counts=False, add_layer=True)
+    adata_result = dsb_adapted(adata_filtered, adata_raw, pseudocount=1, denoise_counts=False)
 
     # Verify that the dsb_normalized layer is added and is a dense array
     assert "dsb_normalized" in adata_result.layers
     assert isinstance(adata_result.layers["dsb_normalized"], np.ndarray)
-
-def test_dsb_adapted_no_layer(test_datasets):
-    """
-    Test dsb_adapted function without adding a new layer.
-    """
-    adata_filtered, adata_raw = test_datasets
-
-    # Run the dsb_adapted function without adding a new layer
-    adata_result = dsb_adapted(adata_filtered, adata_raw, pseudocount=1, denoise_counts=False, add_layer=False)
-
-    # Verify that the dsb_normalized layer is not added and X is modified
-    assert "dsb_normalized" not in adata_result.layers

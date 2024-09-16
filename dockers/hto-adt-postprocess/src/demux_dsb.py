@@ -26,44 +26,46 @@ logging.basicConfig(
 )
 
 
-def evaluate_clustering(data, method='kmeans'):
+def cluster_and_evaluate(data, method="kmeans"):
     """
-    Evaluate clustering using multiple metrics for K-means or GMM.
-    
+    Perform clustering and evaluate it using multiple metrics for K-means or GMM.
+
     Parameters:
     data (np.array): The input data used for clustering
     method (str): Clustering method to use. Either 'kmeans' or 'gmm'. Default is 'kmeans'.
-    
+
     Returns:
-    dict: A dictionary containing various goodness of fit metrics
+    tuple: A tuple containing:
+        - np.array: The cluster labels
+        - int: The index of the positive cluster
+        - dict: A dictionary containing various goodness of fit metrics
     """
-    n_clusters=2
-    if method == 'kmeans':
+    n_clusters = 2
+    if method == "kmeans":
         model = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         labels = model.fit_predict(data)
-        
+        positive_cluster = np.argmax(model.cluster_centers_)
+
         silhouette = silhouette_score(data, labels)
         davies_bouldin = davies_bouldin_score(data, labels)
-        
-        return {
-            "silhouette_score": silhouette,
-            "davies_bouldin_index": davies_bouldin
-        }
-    
-    elif method == 'gmm':
+
+        metrics = {"silhouette_score": silhouette, "davies_bouldin_index": davies_bouldin}
+
+    elif method == "gmm":
         model = GaussianMixture(n_components=n_clusters, random_state=42)
         model.fit(data)
-        
+        labels = model.predict(data)
+        positive_cluster = np.argmax(model.means_)
+
         bic = model.bic(data)
         log_likelihood = model.score(data) * data.shape[0]
-        
-        return {
-            "bic": bic,
-            "log_likelihood": log_likelihood
-        }
-    
+
+        metrics = {"bic": bic, "log_likelihood": log_likelihood}
+
     else:
         raise ValueError("Method must be either 'kmeans' or 'gmm'")
+
+    return labels, positive_cluster, metrics
 
 def hto_demux_dsb(
     path_dsb_denoised_adata_dir: str,
@@ -78,16 +80,13 @@ def hto_demux_dsb(
     - method (str): Clustering method to use. Must be either 'gmm' or 'kmeans'. Default is 'kmeans'.
 
     Returns:
-    - tuple: A tuple containing:
-        - DataFrame: A DataFrame containing the classifications of the HTOs for each cell.
-        - dict: A dictionary containing the evaluation metrics for each HTO.
+    - AnnData: An AnnData object containing the results of the demultiplexing.
     """
-    # Read in adata_filtered
     adata_filtered = ad.read_h5ad(path_dsb_denoised_adata_dir)
 
     # Check if the dsb_normalized is added in adata_filtered layers
     if "dsb_normalized" in adata_filtered.layers:
-        df_umi_dsb_values = adata_filtered.layers['dsb_normalized']
+        df_umi_dsb_values = adata_filtered.layers["dsb_normalized"]
     else:
         df_umi_dsb_values = adata_filtered.X
 
@@ -99,47 +98,43 @@ def hto_demux_dsb(
         columns=features,
         index=barcodes,
     )
-    
+
     classifications = []
     metrics = {}
-    
+
     logger.info(f"Running clustering using {method}...")
     for hto in df_umi_dsb.columns:
         data = df_umi_dsb[hto].values.reshape(-1, 1)
-        
-        # Evaluate clustering
-        hto_metrics = evaluate_clustering(data, method=method)
+
+        # Perform clustering and evaluation in one step
+        labels, positive_cluster, hto_metrics = cluster_and_evaluate(data, method=method)
         metrics[hto] = hto_metrics
-        
-        if method == 'kmeans':
-            model = KMeans(n_clusters=2, random_state=0)
-            labels = model.fit_predict(data)
-            positive_cluster = np.argmax(model.cluster_centers_)
-        elif method == 'gmm':
-            model = GaussianMixture(n_components=2, random_state=0)
-            model.fit(data)
-            labels = model.predict(data)
-            positive_cluster = np.argmax(model.means_)
-            
+
         # Classify the points based on the cluster labels
-        classifications.append([0 if label != positive_cluster else 1 for label in labels])
-    
-    result_df = pd.DataFrame(classifications, index=df_umi_dsb.columns, columns=df_umi_dsb.index).T
-    
+        classifications.append(
+            [0 if label != positive_cluster else 1 for label in labels]
+        )
+
+    result_df = pd.DataFrame(
+        classifications, index=df_umi_dsb.columns, columns=df_umi_dsb.index
+    ).T
+
     # Categorize cells based on their HTO classifications
     def categorize_cell(row):
         positive_htos = row[row == 1].index.tolist()
         if len(positive_htos) == 0:
-            return 'Negative', None
+            return "Negative", None
         elif len(positive_htos) == 1:
             return positive_htos[0][:5], None
         else:
-            return 'Doublet', ', '.join(positive_htos)
-    
-    result_df['hashID'], result_df['Doublet_Info'] = zip(*result_df.apply(categorize_cell, axis=1))
+            return "Doublet", ", ".join(positive_htos)
 
-    new_df = result_df[['hashID', 'Doublet_Info']]
-    
+    result_df["hashID"], result_df["Doublet_Info"] = zip(
+        *result_df.apply(categorize_cell, axis=1)
+    )
+
+    new_df = result_df[["hashID", "Doublet_Info"]]
+
     logger.info("Classification completed.")
 
     new_df.to_csv("classification.tsv.gz", sep="\t", compression="gzip")
@@ -150,9 +145,9 @@ def hto_demux_dsb(
         obs=pd.DataFrame(index=df_umi_dsb.index),
         var=pd.DataFrame(index=df_umi_dsb.columns),
     )
-    adata_result.obs['hashID'] = result_df['hashID']
-    adata_result.obs['Doublet_Info'] = result_df['Doublet_Info']
-    adata_result.uns['metrics'] = metrics
+    adata_result.obs["hashID"] = result_df["hashID"]
+    adata_result.obs["Doublet_Info"] = result_df["Doublet_Info"]
+    adata_result.uns["metrics"] = metrics
 
     return adata_result
 
@@ -167,6 +162,7 @@ def numpy_to_python(obj):
     else:
         return obj
 
+
 def write_stats(result_df, metrics, output_file="stats.yml"):
     stats = result_df.groupby(by="hashID").size().to_dict()
     stats["Total"] = len(result_df)
@@ -174,15 +170,11 @@ def write_stats(result_df, metrics, output_file="stats.yml"):
     # Convert NumPy values to native Python types
     metrics = numpy_to_python(metrics)
 
-    output_dict = {
-        "stats": stats,
-        "metrics": metrics
-    }
+    output_dict = {"stats": stats, "metrics": metrics}
 
     # Write stats and metrics to the YAML file
     with open(output_file, "wt") as fout:
         yaml.dump(output_dict, fout, sort_keys=False, default_flow_style=False)
-
 
 
 def parse_arguments():
@@ -229,11 +221,10 @@ if __name__ == "__main__":
         method=params.method,
     )
 
-    # Create output directory if it doesn't exist
     os.makedirs(params.output_dir, exist_ok=True)
 
     stats_file = os.path.join(params.output_dir, "stats.yml")
-    write_stats(adata_result.obs, adata_result.uns['metrics'], output_file=stats_file)
+    write_stats(adata_result.obs, adata_result.uns["metrics"], output_file=stats_file)
 
     logger.info("Saving AnnData result...")
     adata_output_file = os.path.join(params.output_dir, "demux_result.h5ad")

@@ -32,7 +32,7 @@ def dsb(
     adata_raw = ad.read_h5ad(path_adata_raw_in)
 
     logger.info("Running DSB...")
-    dsb_adapted(adata_filtered, adata_raw, add_layer=True)
+    dsb_adapted(adata_filtered, adata_raw)
 
     logger.info(f"Saving AnnData {path_adata_out}...")
     adata_filtered.write(path_adata_out)
