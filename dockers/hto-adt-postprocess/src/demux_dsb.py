@@ -125,7 +125,7 @@ def hto_demux_dsb(
         if len(positive_htos) == 0:
             return "Negative", None
         elif len(positive_htos) == 1:
-            return positive_htos[0][:5], None
+            return positive_htos[0], None
         else:
             return "Doublet", ", ".join(positive_htos)
 

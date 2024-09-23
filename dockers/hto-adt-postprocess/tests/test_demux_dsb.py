@@ -211,10 +211,9 @@ def test_well_separated_clusters_kmeans():
     Generates synthetic data with two distinct clusters using the 
     make_blobs function. It then applies the clustering and evaluation 
     method to ensure that the following conditions are met:
-    - The number of unique labels (clusters) is equal to 2.
-    - The silhouette score is greater than 0.75, indicating well-separated clusters.
-    - The Davies-Bouldin index is less than 0.5, suggesting low similarity 
-        between clusters.
+    - The number of clusters is equal to 2.
+    - silhouette score is greater than 0.75, indicating well-separated clusters.
+    - Davies-Bouldin index is less than 0.5, suggesting low similarity between clusters.
     """
     X, _ = make_blobs(n_samples=300, centers=[(0, 0), (10, 10)], cluster_std=0.5, random_state=42)
     labels, positive_cluster, metrics = cluster_and_evaluate(X, method='kmeans')
@@ -230,9 +229,9 @@ def test_overlapping_clusters_kmeans():
     Generates synthetic data with overlapping clusters using the 
     make_blobs function. It then applies the clustering and evaluation 
     method to ensure that the following conditions are met:
-    - The number of unique labels should be 2.
-    - The silhouette score should be less than 0.5.
-    - The Davies-Bouldin index should be greater than 0.5.
+    - The number of clusters should be 2.
+    - silhouette score should be less than 0.5.
+    - Davies-Bouldin index should be greater than 0.5.
     """
     X, _ = make_blobs(n_samples=300, centers=[(0, 0), (1, 1)], cluster_std=1.0, random_state=42)
     labels, positive_cluster, metrics = cluster_and_evaluate(X, method='kmeans')
