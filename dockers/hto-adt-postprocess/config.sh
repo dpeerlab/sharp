@@ -1,4 +1,4 @@
-version = "0.3.8"
+version = "latest"
 
 # docker related
 registry = "docker.io"
