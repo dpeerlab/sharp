@@ -27,15 +27,15 @@ def generate_clustered_hto_data(n_cells=1000, n_htos=3, noise_level=0.5):
     
     # Generate singlets
     singlets, singlet_labels = make_blobs(n_samples=n_singlets, n_features=n_htos, 
-                                          centers=hto_centers, cluster_std=1.0)
+                                          centers=hto_centers, cluster_std=3.0)
     
     # Generate doublets
     doublets = []
     doublet_labels = []
     for _ in range(n_doublets):
         hto1, hto2 = np.random.choice(n_htos, 2, replace=False)
-        doublet = (hto_centers[hto1] + hto_centers[hto2]) / 2
-        doublet += np.random.normal(0, 1, n_htos)
+        doublet = (hto_centers[hto1] + hto_centers[hto2]) * np.random.uniform(0.5, 1)
+        doublet += np.random.normal(0, 0.2, n_htos)
         doublets.append(doublet)
         doublet_labels.append("Doublet")
     doublets = np.array(doublets)

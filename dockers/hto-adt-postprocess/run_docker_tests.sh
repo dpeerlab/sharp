@@ -1,4 +1,9 @@
+#!/bin/bash
+
+source config.sh
+
 docker run --rm -it \
   -v $(pwd):/opt/project \
-  sailmskcc/hto-adt-postprocess:0.3.8 \
+  -w /opt/project \
+  ${image_name}:${version} \
   pytest -v /opt/project/tests
