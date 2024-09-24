@@ -13,6 +13,9 @@ COPY src/* /opt/
 # data
 COPY ./data/3M-february-2018.txt.gz /opt/data/
 COPY ./data/3M-3pgex-may-2023.txt.gz /opt/data/
+COPY ./data/whitelists.json /opt/data/
+COPY ./data/test-small-v3.txt /opt/data/
+COPY ./data/test-small-v4.txt /opt/data/
 
 # setup
 WORKDIR /opt
