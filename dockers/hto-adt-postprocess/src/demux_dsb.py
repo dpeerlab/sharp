@@ -221,7 +221,7 @@ if __name__ == "__main__":
         method=params.method,
     )
 
-    os.makedirs(params.output_dir, exist_ok=True)
+    # os.makedirs(params.output_dir, exist_ok=True)
 
     stats_file = os.path.join(params.output_dir, "stats.yml")
     write_stats(adata_result.obs, adata_result.uns["metrics"], output_file=stats_file)

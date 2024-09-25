@@ -80,8 +80,7 @@ def test_dsb_adapted_denoising(test_datasets):
     assert not np.array_equal(adata_result_denoised.layers["dsb_normalized"], adata_result_no_denoise.layers["dsb_normalized"]), \
         "Denoised and non-denoised results should be different"
 
-    # Optional: Add more specific checks if needed
-    # For example, you might want to check that the denoised values have lower variance
+    # Check that the denoised values have lower variance
     denoised_variance = np.var(adata_result_denoised.layers["dsb_normalized"])
     non_denoised_variance = np.var(adata_result_no_denoise.layers["dsb_normalized"])
     assert denoised_variance < non_denoised_variance, \
