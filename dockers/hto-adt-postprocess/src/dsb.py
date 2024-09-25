@@ -37,7 +37,9 @@ def dsb(
     dsb_adapted(adata_filtered, adata_raw)
 
     # Ensure the output directory exists
-    os.makedirs(os.path.dirname(path_adata_out), exist_ok=True)
+    dir = os.path.dirname(path_adata_out)
+    if dir != "":
+        os.makedirs(dir, exist_ok=True)
 
     logger.info(f"Saving AnnData {path_adata_out}...")
     adata_filtered.write(path_adata_out)
