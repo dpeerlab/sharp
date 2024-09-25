@@ -89,8 +89,8 @@ def parse_arguments():
         "--create-viz",
         action="store_true",
         dest="create_viz",
-        help="create visualization plot (default: True)",
-        default=True,
+        help="create visualization plot (default: False)",
+        default=False,
     )
 
     # parse arguments
