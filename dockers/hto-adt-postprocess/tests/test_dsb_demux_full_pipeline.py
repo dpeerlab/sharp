@@ -167,3 +167,27 @@ def test_full_pipeline(test_datasets_with_files, tmp_path):
     assert overall_accuracy > 0.8, f"Overall accuracy is only {overall_accuracy:.2f}"
     
     print(f"Full pipeline test completed successfully. Overall accuracy: {overall_accuracy:.2f}")
+
+def test_incorrect_path(test_datasets_with_files):
+    """
+    Test if output path is given as a file instead of a directory.
+    """
+    filtered_path, raw_path, adata_filtered, adata_raw = test_datasets_with_files
+    
+    dsb_output_path = "dsb_output.h5ad"
+    dsb(
+        path_adata_filtered_in=filtered_path,
+        path_adata_raw_in=raw_path,
+        path_adata_out=dsb_output_path,
+        create_viz=True
+    )
+    
+    # Verify DSB output
+    assert os.path.exists(dsb_output_path), "DSB output file not created"
+    adata_dsb = ad.read_h5ad(dsb_output_path)
+    assert "dsb_normalized" in adata_dsb.layers, "DSB normalized layer not found"
+
+    # Check if visualization file was created
+    viz_filename = os.path.splitext(os.path.basename(dsb_output_path))[0] + "_dsb_viz.png"
+    viz_output_path = os.path.join(os.path.dirname(dsb_output_path), viz_filename)
+    assert os.path.exists(viz_output_path), f"Visualization file not created at {viz_output_path}"

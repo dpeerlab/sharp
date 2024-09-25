@@ -37,17 +37,26 @@ def dsb(
     dsb_adapted(adata_filtered, adata_raw)
 
     # Ensure the output directory exists
-    os.makedirs(os.path.dirname(path_adata_out), exist_ok=True)
+    # os.makedirs(os.path.dirname(path_adata_out), exist_ok=True)
 
     logger.info(f"Saving AnnData {path_adata_out}...")
     adata_filtered.write(path_adata_out)
 
+
     if create_viz:
         # Create visualization filename based on the AnnData filename
         viz_filename = os.path.splitext(os.path.basename(path_adata_out))[0] + "_dsb_viz.png"
-        viz_output_path = os.path.join(os.path.dirname(path_adata_out), viz_filename)
+        
+        if os.path.dirname(path_adata_out):
+            # If path_adata_out includes a directory, use that
+            viz_output_path = os.path.join(os.path.dirname(path_adata_out), viz_filename)
+        else:
+            # If path_adata_out is just a filename, use the current directory
+            viz_output_path = os.path.join(os.getcwd(), viz_filename)
+        
         logger.info(f"Creating visualization at {viz_output_path}...")
         create_visualization(adata_filtered, viz_output_path)
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -80,8 +89,8 @@ def parse_arguments():
         "--create-viz",
         action="store_true",
         dest="create_viz",
-        help="create visualization plot (default: True)",
-        default=True,
+        help="create visualization plot (default: False)",
+        default=False,
     )
 
     # parse arguments
