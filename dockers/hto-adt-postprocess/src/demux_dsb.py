@@ -70,6 +70,7 @@ def cluster_and_evaluate(data, method="kmeans"):
 def hto_demux_dsb(
     path_dsb_denoised_adata_dir: str,
     method: str = "kmeans",
+    layer: str = "dsb_normalized",
 ):
     """
     Classify HTOs as singlets (assign to HTO), doublets, or negatives based on either a 2-component K-means or GMM,
@@ -85,19 +86,7 @@ def hto_demux_dsb(
     adata_filtered = ad.read_h5ad(path_dsb_denoised_adata_dir)
 
     # Check if the dsb_normalized is added in adata_filtered layers
-    if "dsb_normalized" in adata_filtered.layers:
-        df_umi_dsb_values = adata_filtered.layers["dsb_normalized"]
-    else:
-        df_umi_dsb_values = adata_filtered.X
-
-    barcodes = adata_filtered.obs_names
-    features = adata_filtered.var_names
-
-    df_umi_dsb = pd.DataFrame(
-        df_umi_dsb_values,
-        columns=features,
-        index=barcodes,
-    )
+    df_umi_dsb = adata_filtered.to_df(layer=layer)
 
     classifications = []
     metrics = {}
@@ -112,7 +101,7 @@ def hto_demux_dsb(
 
         # Classify the points based on the cluster labels
         classifications.append(
-            [0 if label != positive_cluster else 1 for label in labels]
+            (labels == positive_cluster).astype(int)
         )
 
     result_df = pd.DataFrame(
@@ -133,48 +122,15 @@ def hto_demux_dsb(
         *result_df.apply(categorize_cell, axis=1)
     )
 
-    new_df = result_df[["hashID", "Doublet_Info"]]
-
     logger.info("Classification completed.")
 
-    new_df.to_csv("classification.tsv.gz", sep="\t", compression="gzip")
-
     # create an anndata object where the denoised data is the X matrix, the barcodes and features are the obs and var names, add the hashID and Doublet_Info as an obs column, and metrics as an uns
-    adata_result = ad.AnnData(
-        X=df_umi_dsb.values,
-        obs=pd.DataFrame(index=df_umi_dsb.index),
-        var=pd.DataFrame(index=df_umi_dsb.columns),
-    )
-    adata_result.obs["hashID"] = result_df["hashID"]
-    adata_result.obs["Doublet_Info"] = result_df["Doublet_Info"]
-    adata_result.uns["metrics"] = metrics
+    adata_filtered.obs["hashID"] = result_df["hashID"]
+    adata_filtered.obs["Doublet_Info"] = result_df["Doublet_Info"]
+    adata_filtered.uns["metrics"] = metrics
 
-    return adata_result
+    return adata_filtered
 
-
-def numpy_to_python(obj):
-    if isinstance(obj, np.generic):
-        return obj.item()
-    elif isinstance(obj, dict):
-        return {k: numpy_to_python(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [numpy_to_python(i) for i in obj]
-    else:
-        return obj
-
-
-def write_stats(result_df, metrics, output_file="stats.yml"):
-    stats = result_df.groupby(by="hashID").size().to_dict()
-    stats["Total"] = len(result_df)
-
-    # Convert NumPy values to native Python types
-    metrics = numpy_to_python(metrics)
-
-    output_dict = {"stats": stats, "metrics": metrics}
-
-    # Write stats and metrics to the YAML file
-    with open(output_file, "wt") as fout:
-        yaml.dump(output_dict, fout, sort_keys=False, default_flow_style=False)
 
 
 def parse_arguments():
@@ -197,10 +153,18 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--output-dir",
+        "--layer",
         action="store",
-        dest="output_dir",
-        help="directory to save output files",
+        dest="layer",
+        help="layer to use for demultiplexing",
+        default="dsb_normalized",
+    )
+
+    parser.add_argument(
+        "--output-path",
+        action="store",
+        dest="output_path",
+        help="path to an output adata file",
         required=True,
     )
 
@@ -219,16 +183,11 @@ if __name__ == "__main__":
     adata_result = hto_demux_dsb(
         params.path_dsb_denoised_adata_dir,
         method=params.method,
+        layer=params.layer,
     )
 
-    # os.makedirs(params.output_dir, exist_ok=True)
-
-    stats_file = os.path.join(params.output_dir, "stats.yml")
-    write_stats(adata_result.obs, adata_result.uns["metrics"], output_file=stats_file)
-
     logger.info("Saving AnnData result...")
-    adata_output_file = os.path.join(params.output_dir, "demux_result.h5ad")
-    adata_result.write(adata_output_file)
+    adata_result.write(params.output_path)
 
     logger.info(f"Results saved to {params.output_dir}")
     logger.info("DONE.")
