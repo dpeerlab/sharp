@@ -132,30 +132,6 @@ def hto_demux_dsb(
     return adata_filtered
 
 
-def numpy_to_python(obj):
-    if isinstance(obj, np.generic):
-        return obj.item()
-    elif isinstance(obj, dict):
-        return {k: numpy_to_python(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [numpy_to_python(i) for i in obj]
-    else:
-        return obj
-
-
-def write_stats(result_df, metrics, output_file="stats.yml"):
-    stats = result_df.groupby(by="hashID").size().to_dict()
-    stats["Total"] = len(result_df)
-
-    # Convert NumPy values to native Python types
-    metrics = numpy_to_python(metrics)
-
-    output_dict = {"stats": stats, "metrics": metrics}
-
-    # Write stats and metrics to the YAML file
-    with open(output_file, "wt") as fout:
-        yaml.dump(output_dict, fout, sort_keys=False, default_flow_style=False)
-
 
 def parse_arguments():
 
