@@ -213,5 +213,5 @@ if __name__ == "__main__":
     logger.info("Saving AnnData result...")
     adata_result.write(params.output_path)
 
-    logger.info(f"Results saved to {params.output_dir}")
+    logger.info(f"Results saved to {params.output_path}")
     logger.info("DONE.")
