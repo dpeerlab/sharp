@@ -1,3 +1,6 @@
+"""
+Translate GEX to HTO barcodes
+"""
 import os
 import sys
 import json

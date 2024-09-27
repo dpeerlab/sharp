@@ -185,3 +185,20 @@ def test_subset_adata(path_test_data):
     assert adata is not None
 
     os.remove("adata.h5ad")
+
+def test_symmetry_of_whitelists(path_test_data):
+    """
+    Test that all whitelists are symmetrical.
+    If this assumption is violated in the future, need to update the translation
+    code.
+    """
+
+    path_data = get_test_data_path("data")
+    whitelists = [f for f in os.listdir(path_data) if f.endswith(".txt.gz")]
+    for whitelist in whitelists:
+        df = pd.read_csv(os.path.join(path_data, whitelist), names=["gex", "hto"], index_col=None, header=None, sep="\t")
+        print(df.head())
+        assert all(df.hto.isin(df.gex)), f"ERROR '{whitelist}': Not all HTO barcodes are also GEX barcodes."
+        df = df.set_index("gex")
+        df.loc[:, "gex_translated"] = df.loc[df.hto].index.values
+        assert all(df.hto == df.gex_translated), f"ERROR '{whitelist}': Not all translated GEX barcodes are equivalent to HTO"
