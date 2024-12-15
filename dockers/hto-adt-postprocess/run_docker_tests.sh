@@ -3,7 +3,7 @@
 source config.sh
 
 docker run --rm -it \
-  -v $(pwd):/opt/project \
-  -w /opt/project \
+  -v $(pwd):/opt \
+  -w /opt \
   ${image_name}:${version} \
-  pytest -v /opt/project/tests
+  pytest -v /opt/tests \

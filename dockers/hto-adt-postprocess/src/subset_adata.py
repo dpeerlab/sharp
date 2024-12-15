@@ -7,8 +7,6 @@ import logging
 import anndata as ad
 import pandas as pd
 
-from dna3bit import DNA3Bit
-
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
 
@@ -35,21 +33,11 @@ def assert_cellbarcodes(barcodes, top_k=1000):
             )
     assert len(barcodes) == len(set(barcodes)), "Cell barcodes are not unique."
 
-
-def convert_barcodes(x):
-    """
-    Convert a cell barcode to DNA3Bit if all letters are numeric.
-    """
-    encoder_decoder = DNA3Bit()
-    x = map(lambda i: encoder_decoder.decode(int(i)).decode(), x)
-    return list(x)
-
-
 def subset_adata(
     path_adata_in: str,
     path_adata_out: str,
     path_cb_whitelist: str,
-    convert: bool = True,
+    cb_whitelist_method: str,
 ):
     """
     Subset an AnnData object to only include cells in a given whitelist. This only works with alphanumeric cell barcodes.
@@ -60,10 +48,6 @@ def subset_adata(
 
     logger.info(f"Loading cell barcode whitelist {path_cb_whitelist}...")
     cb_whitelist = pd.read_csv(path_cb_whitelist, header=None, index_col=0).index.values
-
-    logger.info("Converting cell barcode whitelist to DNA3Bit...")
-    if convert:
-        adata.obs_names = convert_barcodes(adata.obs_names)
 
     logger.info("Asserting cell barcodes...")
     assert_cellbarcodes(adata.obs_names)
@@ -78,6 +62,11 @@ def subset_adata(
         logger.warning(
             f"Cell barcodes ({len(difference)}) are not in the AnnData object:  {' '.join(difference)}. Ignoring them."
         )
+
+    logger.info("Preparing barcodes...")
+    if cb_whitelist_method.lower() == "10x":
+        adata.obs_names = adata.obs_names + "-1"
+    adata.obs.index.name = "barcode"
 
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
@@ -112,11 +101,11 @@ def parse_arguments():
     )
 
     parser.add_argument(
-        "--convert",
-        action="store_true",
-        dest="convert",
-        help="convert cell barcodes to DNA3Bit",
-        required=False,
+        "--cb-whitelist-method",
+        action="store",
+        dest="cb_whitelist_method",
+        help="method of whitelist generation. If 10x, add -1 to barcodes.",
+        required=True,
     )
 
     # parse arguments
@@ -135,7 +124,7 @@ if __name__ == "__main__":
         path_adata_in=params.path_adata_in,
         path_adata_out=params.path_adata_out,
         path_cb_whitelist=params.path_cb_whitelist,
-        convert=params.convert,
+        cb_whitelist_method=params.cb_whitelist_method,
     )
 
     logger.info("DONE.")

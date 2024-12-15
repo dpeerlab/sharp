@@ -10,8 +10,6 @@ import anndata as ad
 import pandas as pd
 import scipy.io
 
-from dna3bit import DNA3Bit
-
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
 
@@ -65,14 +63,8 @@ def to_adata(sample_name, path_tag_list, path_umi_counts):
     feature_names = adata.var.index.map(lambda x: str(df_tags.loc[x, "feature_name"]))
     adata.var["feature_name"] = feature_names
 
-    dna3bit = DNA3Bit()
-    # get numerical barcodes but stringify (not allowed to store numbers in obs.index)
-    numerical_barcodes = adata.obs.index.map(lambda x: str(dna3bit.encode(x)))
     # add nucleotide barcode to obs
     adata.obs["barcode_sequence"] = adata.obs_names
-
-    # use numerical barcodes for obs index
-    adata.obs_names = numerical_barcodes
 
     adata.write(sample_name + ".h5ad")
 

@@ -125,7 +125,7 @@ def hto_demux_dsb(
     logger.info("Classification completed.")
 
     # create an anndata object where the denoised data is the X matrix, the barcodes and features are the obs and var names, add the hashID and Doublet_Info as an obs column, and metrics as an uns
-    adata_filtered.obs["hashID"] = result_df["hashID"]
+    adata_filtered.obs["hashID"] = result_df["hashID"].astype(str)
     adata_filtered.obs["Doublet_Info"] = result_df["Doublet_Info"]
     adata_filtered.uns["metrics"] = metrics
 

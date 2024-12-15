@@ -1,5 +1,5 @@
 """
-Translate GEX to HTO barcodes
+Translate GEX to HTO barcodes of barcode.tsv.gz from 10x Genomics.
 """
 import os
 import sys
@@ -8,8 +8,6 @@ import argparse
 import pandas as pd
 import humanfriendly
 import logging
-from dna3bit import DNA3Bit
-
 
 logger = logging.getLogger()
 
@@ -21,15 +19,6 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout),
     ],
 )
-
-
-def decode(barcodes):
-    encoder_decoder = DNA3Bit()
-
-    decoded = set(map(lambda x: encoder_decoder.decode(x).decode(), barcodes))
-
-    return decoded
-
 
 def decide_which_whitelist(chemistry, base_path="/opt"):
     """
@@ -59,12 +48,7 @@ def translate(
     barcodes = df.iloc[:, 0].values
 
     if type(barcodes[0]) is str:
-        # remove the suffix -1 in case Cell Ranger output
         barcodes = set(map(lambda x: x.strip("-1").strip(), barcodes))
-    else:
-        # SEQC outputs numerical barcode.
-        # decode back to nucleotide sequence
-        barcodes = decode(barcodes)
 
     # write translated barcodes
     path_10x_whitelist = decide_which_whitelist(chemistry, base_path=base_path)
