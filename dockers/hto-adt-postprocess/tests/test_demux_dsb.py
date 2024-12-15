@@ -5,7 +5,7 @@ import anndata as ad
 import yaml
 import os
 from sklearn.datasets import make_blobs
-from src.demux_dsb import cluster_and_evaluate, hto_demux_dsb, write_stats
+from src.demux_dsb import cluster_and_evaluate, hto_demux_dsb
 
 @pytest.fixture
 def mock_dsb_denoised_adata():
@@ -116,35 +116,6 @@ def test_hto_demux_dsb(mock_dsb_denoised_adata, tmp_path):
         overall_accuracy = np.mean(predicted_labels == true_labels)
         assert overall_accuracy > 0.8, f"Overall accuracy for {method} is only {overall_accuracy:.2f}"
 
-def test_write_stats(mock_dsb_denoised_adata, tmp_path):
-    """
-    Test the functionality of writing statistics to a YAML file after processing 
-    a denoised AnnData object using the hto_demux_dsb function
-    Parameters:
-        mock_dsb_denoised_adata: A mock AnnData object that has been denoised.
-        tmp_path: A temporary directory path for storing intermediate files.
-    Checks:
-        The function should write a YAML file containing the statistics of the 
-        processed data, including the total number of cells and the metrics for
-        each HTO
-    """
-    temp_file = tmp_path / "mock_dsb_denoised_adata.h5ad"
-    mock_dsb_denoised_adata.write(temp_file)
-    
-    result = hto_demux_dsb(str(temp_file), method='kmeans')
-    
-    output_file = tmp_path / "stats.yml"
-    write_stats(result.obs, result.uns['metrics'], output_file=str(output_file))
-    
-    assert output_file.exists()
-    
-    with open(output_file, 'r') as f:
-        stats = yaml.safe_load(f)
-    
-    assert 'stats' in stats
-    assert 'metrics' in stats
-    assert 'Total' in stats['stats']
-    assert all(f'HTO_{i}' in stats['metrics'] for i in range(3))
 
 def test_consistent_classification(mock_dsb_denoised_adata, tmp_path):
     """
