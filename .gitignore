@@ -15,3 +15,5 @@ dockers/hto-adt-postprocess/*classification.tsv.gz
 dockers/hto-adt-postprocess/stats.yml
 dockers/hto-adt-postprocess/tests/
 dockers/hto-adt-postprocess/data/*.pickle
+outputs/
+dockers/cellranger/cellranger*
