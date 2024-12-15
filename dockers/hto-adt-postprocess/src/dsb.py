@@ -1,6 +1,7 @@
 import sys
 import argparse
 import logging
+import pandas as pd
 import anndata as ad
 import os
 
@@ -25,6 +26,7 @@ def dsb(
     path_adata_filtered_in: str,
     path_adata_raw_in: str,
     path_adata_out: str,
+    path_whitelist_emptydrops: str = None,
     create_viz: bool = True,
 ):
     logger.info(f"Loading AnnData {path_adata_filtered_in}...")
@@ -33,8 +35,27 @@ def dsb(
     logger.info(f"Loading AnnData {path_adata_raw_in}...")
     adata_raw = ad.read_h5ad(path_adata_raw_in)
 
+    # Cutoff adata by UMI threshold
+    if path_whitelist_emptydrops is not None:
+        wl = pd.read_csv(
+            path_whitelist_emptydrops,
+            header=None,
+            index_col=None
+        )
+        adata_raw = adata_raw[wl]
+
+        # assert
+        raw_excl = set(adata_raw.obs_names).difference(set(adata_filtered.obs_names))
+        assert len(raw_excl) > 0, \
+            f"adata_raw only contains cells that are available in the filtered set. This should not happen, raw must have more cells. " \
+            f"Make sure that the provided whitelist is correct."
+
+
     logger.info("Running DSB...")
-    dsb_adapted(adata_filtered, adata_raw)
+    dsb_adapted(
+        adata_filtered,
+        adata_raw,
+    )
 
     # Ensure the output directory exists
     # os.makedirs(os.path.dirname(path_adata_out), exist_ok=True)
@@ -46,14 +67,14 @@ def dsb(
     if create_viz:
         # Create visualization filename based on the AnnData filename
         viz_filename = os.path.splitext(os.path.basename(path_adata_out))[0] + "_dsb_viz.png"
-        
+
         if os.path.dirname(path_adata_out):
             # If path_adata_out includes a directory, use that
             viz_output_path = os.path.join(os.path.dirname(path_adata_out), viz_filename)
         else:
             # If path_adata_out is just a filename, use the current directory
             viz_output_path = os.path.join(os.getcwd(), viz_filename)
-        
+
         logger.info(f"Creating visualization at {viz_output_path}...")
         create_visualization(adata_filtered, viz_output_path)
 

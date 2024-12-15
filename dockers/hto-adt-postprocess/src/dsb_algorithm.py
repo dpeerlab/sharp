@@ -123,7 +123,6 @@ def dsb_adapted(
 
     if not denoise_counts:
         adata_filtered.layers["dsb_normalized"] = normalized_matrix
-
         return adata_filtered
 
     # Step 2: Technical noise removal

@@ -7,7 +7,6 @@ import logging
 from anndata._core.anndata import AnnData
 import anndata as ad
 import pandas as pd
-from dna3bit import DNA3Bit
 from translate_barcodes import translate_barcodes
 
 numba_logger = logging.getLogger("numba")
@@ -32,12 +31,7 @@ def translate(adata: AnnData, chemistry: str):
         adata.obs["barcode_sequence"].values, chemistry=chemistry
     )
 
-    # encode nucleotide barcodes into numerical barcodes
-    dna3bit = DNA3Bit()
-    numerical_barcodes = list(
-        map(lambda x: str(dna3bit.encode(x)), translated_barcodes)
-    )
-    adata.obs_names = numerical_barcodes
+    adata.obs_names = translated_barcodes
 
 
 def updata_adata(

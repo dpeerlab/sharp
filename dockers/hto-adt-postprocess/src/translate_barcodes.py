@@ -8,7 +8,7 @@ import argparse
 import pandas as pd
 import anndata as ad
 import logging
-from hto_gex_mapper import decide_which_whitelist
+from translate_10x_barcodes import decide_which_whitelist
 
 logger = logging.getLogger("translate_barcodes")
 
@@ -22,10 +22,10 @@ logging.basicConfig(
 )
 
 
-def translate_barcodes(barcodes, chemistry: str):
+def translate_barcodes(barcodes, chemistry: str, base_path: str="/opt"):
 
     # get whitelist
-    path_translation = decide_which_whitelist(chemistry)
+    path_translation = decide_which_whitelist(chemistry, base_path=base_path)
 
     # translate
     translation_df = pd.read_csv(path_translation, sep="\t", index_col=0, header=None)
@@ -35,10 +35,10 @@ def translate_barcodes(barcodes, chemistry: str):
     return translated_barcodes
 
 
-def convert(df, chemistry: str):
+def convert(df, chemistry: str, base_path: str = "/opt"):
 
     # translate
-    index_new = translate_barcodes(df.index, chemistry)
+    index_new = translate_barcodes(df.index, chemistry, base_path=base_path)
     df_out = df.set_index(index_new)
 
     return df_out
@@ -51,11 +51,11 @@ def translate(
     output_path=None
 ):
     if data_type == "pandas":
-        barcodes = pd.read_csv(path_barcodes, sep="\t", index_col=0, header=None, compression="gzip")
+        barcodes = pd.read_csv(path_barcodes, sep="\t", index_col=0, header=None)
         df_final = convert(barcodes, chemistry)
         if output_path is None:
             output_path = "barcodes-translated.tsv.gz"
-        df_final.to_csv(output_path, header=None, compression="gzip")
+        df_final.to_csv(output_path, header=None)
 
     elif data_type == "adata":
         adata = ad.read_h5ad(path_barcodes)
