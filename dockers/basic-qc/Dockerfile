@@ -1,14 +1,13 @@
-FROM quay.io/hisplan/scri-notebook:0.0.3
+FROM python:3.12-slim-bullseye
 
-LABEL maintainer="Jaeyoung Chun (chunj@mskcc.org)"
+LABEL maintainer="Tobias Krause (krauset@mskcc.org)"
 
-RUN apt-get install -y zip
+COPY requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt
 
-RUN pip install seaborn==0.11.1 matplotlib humanfriendly
-        
-# hack: nbcovert 6+ doesn't work properly to run `nbconvert --to html_toc`
-RUN pip install nbconvert==5.6.1 jupyter_contrib_nbextensions==0.5.1
+RUN pip install nbconvert==5.6.1 jupyter_contrib_nbextensions==0.5.1 jinja2==3.0.3
 RUN jupyter contrib nbextension install --user \
-    && jupyter nbextension enable toc2
+&& jupyter nbextension enable toc2
+RUN python -m ipykernel install --name=python_qc
 
 COPY ./notebooks/inspect-*.ipynb /opt/

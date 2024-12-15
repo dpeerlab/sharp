@@ -1,5 +1,4 @@
 #!/bin/bash -e
 
 source config.sh
-
-docker build -t ${image_name}:${version} .
+docker build --platform linux/amd64 -t ${image_name}:${version} .

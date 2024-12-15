@@ -1,7 +1,12 @@
+"""
+Translate barcodes from HTO <--> GEX (whitelists are symmetrical)
+"""
+
 #!/usr/bin/env python
 import sys
 import argparse
 import pandas as pd
+import anndata as ad
 import logging
 from hto_gex_mapper import decide_which_whitelist
 
@@ -42,18 +47,25 @@ def convert(df, chemistry: str):
 def translate(
     path_barcodes,
     chemistry,
+    data_type="pandas",
+    output_path=None
 ):
-    barcodes = pd.read_csv(
-        path_barcodes, sep="\t", index_col=0, header=None, compression="gzip"
-    )
+    if data_type == "pandas":
+        barcodes = pd.read_csv(path_barcodes, sep="\t", index_col=0, header=None, compression="gzip")
+        df_final = convert(barcodes, chemistry)
+        if output_path is None:
+            output_path = "barcodes-translated.tsv.gz"
+        df_final.to_csv(output_path, header=None, compression="gzip")
 
-    logger.info("Loaded barcodes ({})".format(len(barcodes)))
+    elif data_type == "adata":
+        adata = ad.read_h5ad(path_barcodes)
+        adata.obs = convert(adata.obs, chemistry)
+        if output_path is None:
+            output_path = "adata_translated.h5ad"
+        adata.write_h5ad(output_path)
 
-    # translate HTO barcodes to GEX barcodes
-    logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-    df_final = convert(barcodes, chemistry)
-
-    df_final.to_csv("barcodes-translated.tsv.gz", header=None, compression="gzip")
+    else:
+        raise ValueError(f"Currently supports only 'pandas' and 'adata'. Got '{data_type}'")
 
 
 def parse_arguments():
@@ -76,6 +88,24 @@ def parse_arguments():
         required=True,
     )
 
+    parser.add_argument(
+        "--data-type",
+        action="store",
+        dest="data_type",
+        help="Type of data to translate. Currently supports 'pandas' and 'adata'.",
+        required=False,
+        default="pandas",
+    )
+
+    parser.add_argument(
+        "--output-path",
+        action="store",
+        dest="output_path",
+        help="Path to output file. If not specified, will be saved in the current directory.",
+        required=False,
+        default=None,
+    )
+
     # parse arguments
     params = parser.parse_args()
 
@@ -91,6 +121,8 @@ if __name__ == "__main__":
     translate(
         path_barcodes=params.path_barcodes,
         chemistry=params.chemistry,
+        data_type=params.data_type,
+        output_path=params.output_path,
     )
 
     logger.info("DONE.")

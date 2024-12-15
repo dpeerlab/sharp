@@ -1,5 +1,5 @@
-version="0.2.1"
+version="0.2.3"
 
 # docker related
-registry="quay.io/hisplan"
-image_name="sharp-basic-qc"
+registry="docker.io"
+image_name="sailmskcc/sharp-basic-qc"
