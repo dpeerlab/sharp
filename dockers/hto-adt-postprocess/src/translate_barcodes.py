@@ -3,12 +3,14 @@ Translate barcodes from HTO <--> GEX (whitelists are symmetrical)
 """
 
 #!/usr/bin/env python
+import os
 import sys
 import argparse
+import json
+from typing import Union
 import pandas as pd
 import anndata as ad
 import logging
-from translate_10x_barcodes import decide_which_whitelist
 
 logger = logging.getLogger("translate_barcodes")
 
@@ -21,11 +23,52 @@ logging.basicConfig(
     ],
 )
 
+def decide_which_whitelist(
+    chemistry: str=None,
+    whitelist_name: str=None,
+    base_path="/opt/data
+):
+    """
+    Based on 10x information, decide which whitelist to use. (https://kb.10xgenomics.com/hc/en-us/articles/115004506263-What-is-a-barcode-whitelist-)
 
-def translate_barcodes(barcodes, chemistry: str, base_path: str="/opt"):
+    Args:
+    - chemistry: str, chemistry used in the experiment. E.g. "V2", "V3", "V3.1", "V3.1.1". Uses the whitelist.json file to decide which whitelist to use.
+    - whitelist_name: str, name of the whitelist file. If not specified, will be decided based on the chemistry.
+    - base_path: str, path to the whitelist json file. /opt/data is the default used in the docker container.
+    """
+
+    assert not (chemistry is None and whitelist_name is None), "Either chemistry or whitelist_name must be specified."
+    assert chemistry is None or whitelist_name is None, "Only one of chemistry or whitelist_name must be specified."
+
+    # get whitelist
+    if chemistry is not None:
+        # read
+        with open(os.path.join(base_path, "whitelists.json")) as fin:
+            whitelists = json.load(fin)
+        # get
+        for whitelist_name, chemistries in whitelists.items():
+            if chemistry in chemistries:
+                break
+        assert os.path.exists(path_whitelist), f"Whitelist file '{path_whitelist}' does not exist in '{base_path}'."
+        return path_whitelist
+    else:
+        raise ValueError("Chemistry {} not supported yet.".format(chemistry))
+
+
+def translate_barcodes(
+    barcodes: pd.Series,
+    chemistry: str,
+    base_path: str="/opt"
+):
+    """
+    Transl
+    """
 
     # get whitelist
     path_translation = decide_which_whitelist(chemistry, base_path=base_path)
+
+    # remove -1 suffix
+    barcodes = barcodes.str.replace("-1", "")
 
     # translate
     translation_df = pd.read_csv(path_translation, sep="\t", index_col=0, header=None)
