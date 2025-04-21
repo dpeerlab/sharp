@@ -15,10 +15,9 @@ Check new chemistry logic in `src/hto_gex_map_generator.py` which supports GEM X
 
 ```bash
 docker run --rm \
-    -v $(pwd)/tests:/opt/tests \
     -v $(pwd)/pytest.ini:/opt/pytest.ini \
     -v $(pwd)/test_modules.py:/opt/test_modules.py \
-    sailmskcc/hto-adt-postprocess:0.3.8 \
+    sailmskcc/hto-adt-postprocess:0.3.11 \
     pytest -v
 ```
 
@@ -51,7 +50,7 @@ test_modules.py::test_subset_adata
 ```bash
 docker run -it --rm \
     -v $(pwd)/tests/citeseq:/tests \
-    sailmskcc/hto-adt-postprocess:0.3.6
+    sailmskcc/hto-adt-postprocess:0.3.11
 ```
 
 ### combine.py
