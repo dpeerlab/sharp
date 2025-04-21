@@ -16,7 +16,7 @@ Either you can use the `docker push` command or run `push.sh` (requires [SCING](
 ./push.sh
 ```
 
-## 1.4.2-develop
+## 1.4.4
 
 ```bash
 $ CITE-seq-Count --help
@@ -31,7 +31,7 @@ usage: CITE-seq-Count [-h] -R1 READ1_PATH -R2 READ2_PATH -t TAGS -cbf CB_FIRST
                       [-o OUTFOLDER] [--dense] [-u UNMAPPED_FILE]
                       [-ut UNKNOWNS_TOP] [--debug] [--version]
 
-This script counts matching antibody tags from two fastq files. Version 1.4.3
+This script counts matching antibody tags from two fastq files. Version 1.4.4
 
 optional arguments:
   -h, --help            show this help message and exit
