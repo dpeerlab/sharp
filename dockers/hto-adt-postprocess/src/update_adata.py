@@ -7,7 +7,6 @@ import logging
 from anndata._core.anndata import AnnData
 import anndata as ad
 import pandas as pd
-from translate_barcodes import translate_barcodes
 
 numba_logger = logging.getLogger("numba")
 numba_logger.setLevel(logging.WARNING)
@@ -23,23 +22,10 @@ logging.basicConfig(
     ],
 )
 
-
-def translate(adata: AnnData, chemistry: str):
-
-    # translate (TotalSeq-B HTO <--> GEX)
-    translated_barcodes = translate_barcodes(
-        adata.obs["barcode_sequence"].values, chemistry=chemistry
-    )
-
-    adata.obs_names = translated_barcodes
-
-
 def updata_adata(
     path_class: str,
     path_adata_in: str,
     path_adata_out: str,
-    translate_10x_barcodes: bool,
-    chemistry: str,
 ):
 
     logger.info(f"Loading AnnData {path_adata_in}...")
@@ -50,10 +36,6 @@ def updata_adata(
 
     logger.info("Adding classification to AnnData...")
     adata.obs["hash_id"] = pd.Categorical(df_class.hashID)
-
-    if translate_10x_barcodes:
-        logger.info("Translating TotalSeq-B/C HTO <--> GEX barcodes...")
-        translate(adata, chemistry=chemistry)
 
     logger.info(f"Writing AnnData to {path_adata_out}...")
     adata.write(path_adata_out)
@@ -87,22 +69,6 @@ def parse_arguments():
         required=True,
     )
 
-    parser.add_argument(
-        "--10x-barcode-translation",
-        action="store_true",
-        dest="translate_10x_barcodes",
-        help="Translate HTO barcodes to GEX barcodes",
-        default=False,
-    )
-
-    parser.add_argument(
-        "--chemistry",
-        action="store",
-        dest="chemistry",
-        help="Chemistry, as specified in the emulsion sheet, helps determine the whitelist.",
-        required=True,
-    )
-
     # parse arguments
     params = parser.parse_args()
 
@@ -119,8 +85,6 @@ if __name__ == "__main__":
         path_class=params.path_class,
         path_adata_in=params.path_adata_in,
         path_adata_out=params.path_adata_out,
-        translate_10x_barcodes=params.translate_10x_barcodes,
-        chemistry=params.chemistry,
     )
 
     logger.info("DONE.")
