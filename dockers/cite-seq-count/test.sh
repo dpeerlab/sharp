@@ -2,8 +2,5 @@
 
 source config.sh
 
-docker run -it --rm \
-    cromwell-${image_name}:${version} CITE-seq-Count --help
-
-docker run -it --rm \
-    cromwell-${image_name}:${version} CITE-seq-Count --version
+docker run -it --rm ${image_name}:${version} CITE-seq-Count --help
+docker run -it --rm ${image_name}:${version} CITE-seq-Count --version
