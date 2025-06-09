@@ -3,20 +3,19 @@ FROM python:3.10-slim-bookworm
 
 LABEL maintainer="Tobias Krause (krauset@mskcc.org)"
 
-ARG CITE_SEQ_COUNT_VERSION
-
-ENV CITE_SEQ_COUNT_VERSION 1.4.4
+ARG CITE_SEQ_URL
 
 RUN apt-get update \
     && apt-get install --yes build-essential python3 python3-pip
 
 RUN apt-get install --yes wget zlib1g-dev libbz2-dev liblzma-dev
 
-RUN cd /tmp \
-    && wget https://github.com/Hoohm/CITE-seq-Count/archive/refs/tags/${CITE_SEQ_COUNT_VERSION}.tar.gz \
-    && tar xvzf ${CITE_SEQ_COUNT_VERSION}.tar.gz
 RUN pip3 install scikit-build
-RUN pip3 install /tmp/CITE-seq-Count-${CITE_SEQ_COUNT_VERSION}/
+RUN mkdir -p /tmp/csc && \
+    wget -O /tmp/csc/CITE-seq-Count.tar.gz ${CITE_SEQ_URL} && \
+    tar -xzf /tmp/csc/CITE-seq-Count.tar.gz -C /tmp/csc && \
+    pip3 install --no-cache-dir /tmp/csc/CITE-seq-Count-* && \
+    rm -rf /tmp/csc
 
 ENTRYPOINT ["CITE-seq-Count"]
 CMD ["--help"]
