@@ -9,6 +9,11 @@ path_reads=test/hashtag-v4/reads
 runReport=test/hashtag-v4/run_report.yaml
 path_outdir=test/hashtag-v4/outputs
 
+docker run --rm -it \
+    -p 8888:8888 \
+    -v $(pwd):/inputs \
+    ${image_name}:${version} \
+    /bin/bash
 docker run --rm \
     -p 8888:8888 \
     -v $(pwd):/inputs \
