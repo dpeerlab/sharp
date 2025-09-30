@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source config.sh
 
 # build ${image_name}:${version}
