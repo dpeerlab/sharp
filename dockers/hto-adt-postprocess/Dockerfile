@@ -3,7 +3,7 @@ FROM python:3.12-slim-bullseye
 
 LABEL maintainer="Tobias Krause (krauset@mskcc.org), Hussen Mohammed Ibrahim (ibrahih3@mskcc.org)"
 
-# install
+# install requirements
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
