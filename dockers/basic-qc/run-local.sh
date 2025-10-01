@@ -11,17 +11,9 @@ path_outputs="outputs/hashtag"
 
 mkdir -p ${path_outputs}
 
-papermill \
-    $path_notebook_hashtag ${path_outputs}/hashtag_report.ipynb \
-    --parameters sample_name $sample_name \
-    --parameters path_h5ad $path_h5ad \
-    --parameters path_report $path_report \
-    --parameters path_reads $path_reads \
-    --stdout-file ${path_outputs}/hashtag.stdout.txt \
-    --log-output
-
-jupyter nbconvert ${path_outputs/hashtag_report.ipynb} \
-    --to html \
-    --sanitize-html \
-    --theme=light \
-    --output ${path_outputs}/hashtag_report.html
+python render/cli.py hashtag_report.html \
+    --sample-name $sample_name \
+    --path-h5ad $path_h5ad \
+    --path-report $path_report \
+    --path-reads $path_reads \
+    --path-output $path_outputs/hashtag_report.html
