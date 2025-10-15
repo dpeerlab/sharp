@@ -37,6 +37,10 @@ class ReportData:
 
         # map fields
         self.mapped_fields = {
+            "text_sample_name": {
+                "generator": lambda: self.sample_name,
+                "type": "text"
+            },
             "text_date_created": {
                 "generator": self.generate_text_date_created,
                 "type": "text"
@@ -67,6 +71,10 @@ class ReportData:
             },
             "plot_expression_singlets": {
                 "generator": self.generate_plot_expression_singlets,
+                "type": "plot"
+            },
+            "plot_unmapped_reads": {
+                "generator": self.generate_plot_unmapped_reads,
                 "type": "plot"
             },
             "text_runreport": {
@@ -146,7 +154,7 @@ class ReportData:
     def format_unit(v, unit):
         """Format value with unit for display."""
         if unit == "%":
-            return f"{v:.1f}{unit}"
+            return f"{v:.1%}"
         elif unit == "K":
             return f"{v/1e3:.1f}{unit}"
         elif unit == "M":
@@ -166,7 +174,7 @@ class ReportData:
         # --- Stage 1: Compute raw metrics --- #
 
         # mapping rate
-        mapping_rate = self.run_report["Percentage mapped"]
+        mapping_rate = self.run_report["Percentage mapped"] / 100
 
         # outlier HTO
         hto_counts = self.adata.obs["hash_id"].value_counts()
@@ -175,10 +183,10 @@ class ReportData:
         hto_prop_lowest_prop = hto_props_singlets.min()
         hto_prop_lowest_label = hto_props_singlets.idxmin()
         hto_props_dict = hto_props.to_dict()
-        doublet = hto_props.get("doublet", 0)
-        negative = hto_props.get("negative", 0)
-        doublet_prop = doublet / hto_counts.sum()
-        negative_prop = negative / hto_counts.sum()
+        doublet = hto_counts.get("doublet", 0)
+        negative = hto_counts.get("negative", 0)
+        doublet_prop = hto_props.get("doublet", 0)
+        negative_prop = hto_props.get("negative", 0)
 
         hash_ids = self.adata.var_names.tolist()
         n_htos = len(hash_ids)
@@ -187,10 +195,12 @@ class ReportData:
         # sequencing depth
         sum_umi = self.adata.X.sum()
         sum_reads = self.reads.sum().sum()
+        sum_mapped_reads = self.reads.drop(columns=["unmapped"]).sum().sum()
         reads_total = self.run_report["Reads processed"]
         reads_per_umi = sum_reads / sum_umi
+        mapped_reads_per_umi = sum_mapped_reads / sum_umi
         reads_in_cells = sum_reads / reads_total
-        unmapped_reads_q99 = np.quantile(self.reads.loc[self.adata.obs_names, "unmapped"], .95)
+        unmapped_reads_rate = 1 - (sum_mapped_reads / reads_total)
 
         # low signal
         unstained_cells = sum(self.reads.loc[self.adata.obs_names].sum(1) < 5)
@@ -229,6 +239,13 @@ class ReportData:
                 "Highlight": sum_reads < 1e6
             },
             {
+                "Metric": "Number of Mapped Reads in Cells",
+                "Value": sum_mapped_reads,
+                "Unit": "M",
+                "Source & Implication": "Number of reads successfully mapped to the reference probeset. Low numbers may indicate poor library quality.",
+                "Highlight": sum_mapped_reads < 1e6
+            },
+            {
                 "Metric": "Number of UMIs",
                 "Value": sum_umi,
                 "Unit": "M",
@@ -236,18 +253,18 @@ class ReportData:
                 "Highlight": sum_umi < 5e5
             },
             {
-                "Metric": "Reads per UMI",
-                "Value": reads_per_umi,
+                "Metric": "Mapped Reads per UMI",
+                "Value": mapped_reads_per_umi,
                 "Unit": "",
                 "Source & Implication": "Sequencing saturation measure. Low values may indicate shallow sequencing.",
-                "Highlight": reads_per_umi < 1.2
+                "Highlight": mapped_reads_per_umi < 1.2
             },
             {
                 "Metric": "Reads in Cells",
                 "Value": reads_in_cells,
                 "Unit": "%",
                 "Source & Implication": "Percentage of reads from cells. Low values may indicate poor capture efficiency or high contamination.",
-                "Highlight": reads_in_cells < 1.2
+                "Highlight": reads_in_cells < 0.10
             },
             {
                 "Metric": "Mapping rate",
@@ -257,29 +274,29 @@ class ReportData:
                 "Highlight": mapping_rate < 20
             },
             {
-                "Metric": "Unmapped Reads (Q99)",
-                "Value": unmapped_reads_q99,
-                "Unit": "K",
-                "Source & Implication": "95-Quantile of reads not matching any barcode. High values suggest missing barcodes or contamination",
-                "Highlight": unmapped_reads_q99 > 1e5
+                "Metric": "Unmapped Reads Proportion",
+                "Value": unmapped_reads_rate,
+                "Unit": "%",
+                "Source & Implication": "Proportion of reads not matching any barcode. High values suggest missing barcodes or contamination",
+                "Highlight": unmapped_reads_rate > 0.30
             },
             {
-                "Metric": f"HTO {hto_prop_lowest_label} representation",
-                "Value": hto_prop_lowest_prop * 100,
-                "Unit": "%",
-                "Source & Implication": "Fraction of singlets for this HTO. Low values suggest unbalanced hashing or sample dropout.",
+                "Metric": f"Rarest HTO",
+                "Value": f"{hto_prop_lowest_label} ({hto_prop_lowest_prop:.1%})",
+                "Unit": "",
+                "Source & Implication": "Fraction of rarest occurring HTO. Low values suggest unbalanced hashing or sample dropout.",
                 "Highlight": hto_prop_lowest_prop < (1 - doublet_prop - negative_prop) / (3 * n_htos)
             },
             {
                 "Metric": "Doublets",
-                "Value": f"{doublet:.1f} ({doublet_prop:.1%})",
+                "Value": f"{doublet/1000:.1f}K ({doublet_prop:.1%})",
                 "Unit": "",
                 "Source & Implication": "Cells classified as doublets. High levels reduce assignment accuracy.",
                 "Highlight": doublet_prop > 0.30
             },
             {
-                "Metric": "Negative Proportion",
-                "Value": f"{negative:.1f} ({negative_prop:.1%})",
+                "Metric": "Negatives",
+                "Value": f"{negative/1000:.1f}K ({negative_prop:.1%})",
                 "Unit": "",
                 "Source & Implication": "Cells with no clear HTO signal. High values may indicate inefficient hashing or failed capture.",
                 "Highlight": negative_prop > 0.30
@@ -288,7 +305,7 @@ class ReportData:
                 "Metric": "Unstained Cells",
                 "Value": f"{unstained_cells / 1000:.1f}K ({unstained_cells_prop:.1%})",
                 "Unit": "",
-                "Source & Implication": "Unstained cells express <5 antibody tags. High counts suggest dropout between GEX and HTO..",
+                "Source & Implication": "Unstained cells that express <5 antibody tags. High counts suggest dropout between GEX and HTO.",
                 "Highlight": unstained_cells_prop > .05,
             }
         ]
@@ -338,11 +355,15 @@ class ReportData:
             })
 
         # compile
-        df_metrics = pd.DataFrame(metrics_list)
-        df_metrics = df_metrics[df_metrics["Highlight"]]
-        df_metrics.loc[:, 'Value'] = df_metrics.apply(
-            lambda row: self.format_unit(row['Value'], row['Unit']), axis=1
-        )
+        if len(metrics_list) > 0:
+            df_metrics = pd.DataFrame(metrics_list)
+            df_metrics = df_metrics[df_metrics["Highlight"]]
+            df_metrics.loc[:, 'Value'] = df_metrics.apply(
+                lambda row: self.format_unit(row['Value'], row['Unit']), axis=1
+            )
+        else:
+            df_metrics = pd.DataFrame(columns=["Metric", "Value", "Unit", "Source & Implication", "Highlight"])
+            df_metrics.loc[0] = ["No Additional Warnings", "", "", "", False]
         return df_metrics
 
     def generate_plot_celltypes(self):
@@ -440,6 +461,31 @@ class ReportData:
         ax.set_title("Log HTO Expression between negative, singlets and doublets.")
         ax.set_ylabel("Log HTO Expression")
         ax.set_xlabel("Category")
+        return fig
+
+    def generate_plot_unmapped_reads(self):
+        # get data
+        mapped_reads = self.reads.drop(columns=["unmapped"]).sum(axis=1)
+        unmapped_reads = self.reads["unmapped"]
+        df = pd.DataFrame({
+            "mapped_reads": mapped_reads,
+            "unmapped_reads": unmapped_reads
+        }).melt(var_name="read_type", value_name="read_count")
+        df.loc[:, "read_count_log"] = np.log1p(df["read_count"])
+
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax = sns.kdeplot(
+            data=df,
+            x="read_count_log",
+            hue="read_type",
+            fill=True,
+            common_norm=True,
+            alpha=0.5,
+            ax=ax
+        )
+        ax.set_title("Density of Mapped vs Unmapped Reads per Cell")
+        ax.set_xlabel("Read Count (log scale)")
+        ax.set_ylabel("Density")
         return fig
 
     def generate_text_runreport(self):

@@ -11,10 +11,11 @@ path_outputs="data/outputs/hashtag"
 docker run --rm \
     --platform linux/amd64 \
     --volume $(pwd)/data:/opt/data \
+    --entrypoint "/usr/bin/env" \
     ${image_name}:${version} \
-    render hashtag_report.html \
+    bash -c "python /opt/render/cli.py render hashtag_report.html \
             --sample-name $sample_name \
             --path-h5ad $path_h5ad \
             --path-report $path_report \
             --path-reads $path_reads \
-            --path-output $path_outputs/hashtag_report.html
+            --path-output $path_outputs/hashtag_report.html"

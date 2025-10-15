@@ -28,8 +28,11 @@ class ReportGenerator():
         self.path_output = path_output
         self.report_data = None
 
-        # get template
-        self.env = Environment(loader=FileSystemLoader("templates"))
+        # get template (support local debugging)
+        path_templates = "templates"
+        if os.path.exists("/opt/templates"):
+            path_templates = "/opt/templates"
+        self.env = Environment(loader=FileSystemLoader(path_templates))
         try:
             self.template = self.env.get_template(self.template_name)
         except jinja2.exceptions.TemplateNotFound:
