@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Hashtag Demultiplexing Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --text: #1a1a1a;
+            --muted: #666;
+            --border: #d9d9d9;
+            --accent: #0a7;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+            color: var(--text);
+            line-height: 1.5;
+            background: #fff;
+            display: flex;
+        }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        header h1 { margin: 0 0 .25rem; font-size: 2rem; }
+        .meta { color: var(--muted); margin-bottom: 1.25rem; }
+        /* Simple TOC */
+        /* TOC sidebar */
+        .toc {
+            position: fixed;
+            top: 0;              /* adjust top position */
+            left: 0;
+            width: 250px;             /* adjust width */
+            height: 100vh;            /* full height */
+            background: #f8f8f8;
+            border-right: 1px solid var(--border);
+            padding: 1rem;
+            padding-top: 200px;
+            padding-left: 20px;
+            overflow-y: auto;
+        }
+
+        /* TOC links stacked vertically */
+        .toc a {
+            display: block;
+            margin: .5rem 0;
+            color: #797100;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        /* Push main content to the right of sidebar */
+        .container {
+            margin-left: 270px;       /* leave room for sidebar */
+            max-width: 1200px;        /* adjust as needed */
+            padding: 2rem;
+        }
+        /* H2 sections with vertical line (left border) */
+        .h2-section {
+            border-left: 3px solid var(--border);
+            padding-left: 1rem;
+            margin: 2rem 0;
+        }
+        h2 { margin: 0 0 .5rem; font-size: 1.35rem; }
+        h3 { margin: 1.25rem 0 .5rem; font-size: 1.1rem; }
+        p { margin: .5rem 0 .75rem; }
+        .note { color: var(--muted); }
+        /* Tables inserted via placeholders should stretch nicely */
+        .placeholder { margin: .5rem 0 1rem; }
+        /* Optional: make images responsive if plots are <img> HTML */
+        .placeholder img { max-width: 100%; height: auto; display: block; }
+        .placeholder table {
+            width: 100%;
+            border-collapse: collapse;   /* ← removes doubled borders */
+            border-spacing: 0;           /* safety */
+        }
+        .placeholder table th,
+        .placeholder table td {
+            border: 1px solid #e2e2e2;   /* single border everywhere */
+            padding: .55rem .7rem;
+        }
+            .placeholder table tr:last-child th,
+            .placeholder table tr:last-child td {
+            border-bottom: 1px solid #e2e2e2; /* ensure bottom edge shows cleanly */
+        }
+
+        /* Nav (kept from original template, optional) */
+        #navigation { list-style: none; padding-left: 0; margin-bottom: 1rem; }
+        #navigation li { display: inline-block; margin-right: .75rem; }
+        #navigation a { color: #0366d6; text-decoration: none; }
+        #navigation a:hover { text-decoration: underline; }
+        /* Small code style for inline tokens */
+        code { background: #f3f3f3; padding: .1rem .3rem; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <ul id="navigation">
+    {% for item in navigation %}
+        <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+    {% endfor %}
+    </ul>
+
+    <header>
+        <h1>Hashtag Demultiplexing Report</h1>
+        <h1>{{ text_sample_name }}</h1>
+        <div class="meta">Report created {{ text_date_created }}</div>
+    </header>
+
+    <!-- Tiny table of contents for quick jumps -->
+    <nav class="toc">
+        <h3>Contents</h3>
+        <a href="#warnings">Warnings</a>
+        <a href="#metrics">Metrics</a>
+        <a href="#cell-assignments">Cell Assignments</a>
+        <a href="#hto-dnd">Demultiplexing</a>
+        <a href="#expr-signal">Signal Distribution</a>
+        <a href="#data-insights">Tables</a>
+    </nav>
+
+    <section id="warnings" class="h2-section">
+        <h2>Warnings</h2>
+        <div class="placeholder">
+            {{ table_warnings | safe }}
+        </div>
+    </section>
+
+    <section id="metrics" class="h2-section">
+        <h2>Metrics</h2>
+        <div class="placeholder">
+            {{ table_metrics | safe }}
+        </div>
+    </section>
+
+    <section id="cell-assignments" class="h2-section">
+        <h2>Cell Assignments</h2>
+        <div class="placeholder">
+            {{ plot_celltypes | safe }}
+        </div>
+    </section>
+
+    <section id="hto-dnd" class="h2-section">
+        <h2>Demultiplexing with HTO-DND</h2>
+
+        <p><strong>Overview of the HTO-DND demultiplexing algorithm</strong>
+        (<a href="https://github.com/sail-mskcc/hto_dnd/" target="_blank" rel="noopener noreferrer">github</a>)</p>
+        <ol>
+            <li><strong>Logged Raw</strong>: Logged expression on the x-axis and density on the y-axis.</li>
+            <li><strong>Normalised Data</strong>: Based on estimated background noise.</li>
+            <li><strong>Denoised Data</strong>: Removed cell-by-cell variation and noise.</li>
+        </ol>
+
+        <div class="placeholder">
+            {{ plot_distributions | safe }}
+        </div>
+
+        <p><strong>Overview of denoising</strong></p>
+        <ul>
+            <li><strong>x-axis</strong>: Proxy of technical noise per cell (center of the lower mode of HTO expression).</li>
+            <li><strong>y-axis</strong>: Normalised (row 1) and denoised (row 2) HTO expression.</li>
+        </ul>
+
+        <div class="placeholder">
+            {{ plot_denoising | safe }}
+        </div>
+    </section>
+
+    <section id="expr-signal" class="h2-section">
+        <h2>Expression of Signal and Background</h2>
+        <div class="placeholder">
+            {{ plot_expression_signal | safe }}
+        </div>
+    </section>
+
+    <section id="expr-singlets-doublets" class="h2-section">
+        <h2>Expression of Singlets and Doublets</h2>
+        <div class="placeholder">
+            {{ plot_expression_singlets | safe }}
+        </div>
+    </section>
+
+    <section id="expr-unmapped-reads" class="h2-section">
+        <h2>Expression of Unmapped Reads</h2>
+        <div class="placeholder">
+            {{ plot_unmapped_reads | safe }}
+        </div>
+
+    <section id="data-insights" class="h2-section">
+        <h2>Data insights</h2>
+
+        <h3>Run Report</h3>
+        <div class="placeholder">
+            {{ text_runreport | safe }}
+        </div>
+
+        <h3>UMIs Raw</h3>
+        <div class="placeholder">
+            {{ table_umis_raw | safe }}
+        </div>
+
+        <h3>UMIs Normalised</h3>
+        <div class="placeholder">
+            {{ table_umis_normalised | safe }}
+        </div>
+
+        <h3>UMIs Denoised</h3>
+        <div class="placeholder">
+            {{ table_umis_denoised | safe }}
+        </div>
+
+        <h3>Reads Raw</h3>
+        <div class="placeholder">
+            {{ table_reads_raw | safe }}
+        </div>
+    </section>
+
+</div>
+</body>
+</html>
