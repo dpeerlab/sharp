@@ -55,8 +55,12 @@ class ReportGenerator():
         self.report_data = report_data
         data = {}
         for placeholder_name, metric in self.report_data.mapped_fields.items():
-            content = metric["generator"]()
-            data[placeholder_name] = self.format_html(content, metric["type"])
+            try:
+                content = metric["generator"]()
+                data[placeholder_name] = self.format_html(content, metric["type"])
+            except Exception as e:
+                content = f"<p style='color:red;'>Error generating content for '{placeholder_name}': {str(e)}</p>"
+                data[placeholder_name] = self.format_html(content, "text")
 
         # render HTML
         html_rendered = self.template.render(**data)

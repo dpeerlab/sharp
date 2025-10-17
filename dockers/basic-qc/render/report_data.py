@@ -408,8 +408,15 @@ class ReportData:
         return axs[0].get_figure()
 
     def generate_plot_denoising(self):
-        _, axs = hto.pl.technical_noise(adata=self.adata, var=0)
-        return axs[0][0].get_figure()
+        """Only generate plot if more than 2 hashtags are present. Otherwise the data is not denoised."""
+        if self.adata.shape[1] > 2:
+            _, axs = hto.pl.technical_noise(adata=self.adata, var=0)
+            return axs[0][0].get_figure()
+        else:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.text(0.5, 0.5, "Data is not denoised\n(fewer than 3 hashtags present)", ha="center", va="center", fontsize=14)
+            ax.axis("off")
+            return fig
 
     def generate_plot_expression_signal(self):
         # get data
