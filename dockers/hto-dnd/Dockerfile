@@ -5,7 +5,7 @@ LABEL maintainer="Tobias Krause (krauset@mskcc.org)"
 ARG VERSION_HTO_DND
 
 # install stable version from pypi
-RUN pip install hto==${VERSION_HTO_DND} --no-cache-dir
+RUN pip install "hto==${VERSION_HTO_DND}" "scanpy" --no-cache-dir
 
 WORKDIR /opt
 
