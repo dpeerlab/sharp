@@ -1,4 +1,4 @@
-version="1.0.1"
+version="1.0.2"
 path_notebook_hashtag=notebooks/hashtag-report.ipynb
 
 # docker related
