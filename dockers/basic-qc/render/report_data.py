@@ -271,7 +271,7 @@ class ReportData:
                 "Value": mapping_rate,
                 "Unit": "%",
                 "Source & Implication": "Fraction of reads mapped to reference. Low may indicate contamination, wrong reference (probe barcodes), or poor library prep.",
-                "Highlight": mapping_rate < 20
+                "Highlight": mapping_rate < 0.20
             },
             {
                 "Metric": "Unmapped Reads Proportion",
@@ -410,8 +410,54 @@ class ReportData:
     def generate_plot_denoising(self):
         """Only generate plot if more than 2 hashtags are present. Otherwise the data is not denoised."""
         if self.adata.shape[1] > 2:
-            _, axs = hto.pl.technical_noise(adata=self.adata, var=0)
-            return axs[0][0].get_figure()
+            # init vars
+            n_htos = self.adata.shape[1]
+            array_noise = self.adata.uns["dnd"]["denoise"]["covariates"]
+            array_x = np.array([array_noise.min(), array_noise.max()])
+
+            # init plot
+            n_cols = 3
+            n_rows = int(np.ceil(n_htos / n_cols))
+            fig, axs = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
+            axs = axs.flatten()
+            for i in range(n_htos):
+                # get vars
+                ax = axs[i]
+                var_name = self.adata.var_names[i]
+
+                # get data
+                array_normalised = self.adata.layers["normalised"][:, i]
+                coefs = self.adata.uns["dnd"]["denoise"]["batch_model"]["coefs"][i]
+                array_y = coefs[0] + array_x * coefs[1]
+                df_line = pd.DataFrame({"x": array_x, "y": array_y})
+
+                # plot
+                ax = sns.scatterplot(
+                    x=array_noise,
+                    y=array_normalised,
+                    alpha=0.5,
+                    s=5,
+                    ax=ax,
+                )
+                ax = sns.lineplot(
+                    data=df_line,
+                    x="x",
+                    y="y",
+                    color="black",
+                    linestyle="--",
+                    ax=ax,
+                )
+                ax.set_title(f"HTO '{var_name}'")
+                ax.set_xlabel("Noise Covariate")
+                ax.set_ylabel("Normalised Expression")
+
+            # hide all empty axes
+            for j in range(i + 1, n_rows * n_cols):
+                axs[j].axis("off")
+
+            fig.tight_layout()
+            return fig
+
         else:
             fig, ax = plt.subplots(figsize=(8, 4))
             ax.text(0.5, 0.5, "Data is not denoised\n(fewer than 3 hashtags present)", ha="center", va="center", fontsize=14)
@@ -496,8 +542,7 @@ class ReportData:
         return fig
 
     def generate_text_runreport(self):
-        # yaml to string with 4 space indentation and newlines
-        return yaml.dump(self.run_report, indent=4, default_flow_style=False)
+        return yaml.dump(self.run_report, indent=4, default_flow_style=False, sort_keys=False)
 
     def generate_table_umis_raw(self):
         """Return adata.to_df().head(n) as html"""

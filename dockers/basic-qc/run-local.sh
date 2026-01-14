@@ -11,7 +11,7 @@ path_outputs="outputs/hashtag"
 
 mkdir -p ${path_outputs}
 
-python render/cli.py hashtag_report.html \
+python render/cli.py render hashtag_report.html \
     --sample-name $sample_name \
     --path-h5ad $path_h5ad \
     --path-report $path_report \
